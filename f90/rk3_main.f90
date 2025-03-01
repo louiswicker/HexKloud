@@ -22,33 +22,38 @@
 !      parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 
       real u1  (nz1,0:nx,ny), u11 (nz1,0:nx,ny), ru1 (nz1,0:nx,ny)  &
-     &    ,ru11(nz1,0:nx,ny), ru1t(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
+     &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
      &    ,ru1i(nz1,0:nx,ny), gu1 (nz1,0:nx,ny), du1 (nz1,0:nx,ny)  &
      &    ,u3  (nz1,0:nx,ny), u31 (nz1,0:nx,ny), ru3 (nz1,0:nx,ny)  &
-     &    ,ru31(nz1,0:nx,ny), ru3t(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)  &
+     &    ,ru31(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)  &
      &    ,ru3i(nz1,0:nx,ny), gu3 (nz1,0:nx,ny), du3 (nz1,0:nx,ny)  &
      &    ,u2  (nz1,nx,0:ny), u21 (nz1,nx,0:ny), ru2 (nz1,nx,0:ny)  &
-     &    ,ru21(nz1,nx,0:ny), ru2t(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)  &
+     &    ,ru21(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)  &
      &    ,ru2i(nz1,nx,0:ny), gu2 (nz1,nx,0:ny), du2 (nz1,nx,0:ny)  &
      &    ,w   (nz ,nx,  ny), w1  (nz ,nx  ,ny), rw  (nz ,nx  ,ny)  &
-     &    ,rw1 (nz ,nx  ,ny), rwt (nz1,nx  ,ny), fw  (nz1,nx  ,ny)  &
+     &    ,rw1 (nz ,nx  ,ny), fw  (nz1,nx  ,ny)  &
      &    ,t   (nz1,nx  ,ny), t1  (nz1,nx  ,ny), rt  (nz1,nx  ,ny)  &
-     &    ,rt1 (nz1,nx  ,ny), rtt (nz1,nx  ,ny), ft  (nz1,nx  ,ny)  &
+     &    ,rt1 (nz1,nx  ,ny), ft  (nz1,nx  ,ny)  &
      &    ,ti  (nz1,nx  ,ny), rti (nz1,nx  ,ny), rtb (nz1,nx  ,ny)  &
-     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny), rrt (nz1,nx  ,ny)  &
+     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny)  &
      &    ,rri (nz1,nx  ,ny), rb  (nz1,nx  ,ny), fr  (nz1,nx  ,ny)  &
      &    ,p   (nz1,nx  ,ny), pb  (nz1,nx  ,ny), pii (nz1,nx  ,ny)  &
      &    ,ww  (nz ,nx  ,ny), rho (nz1,nx  ,ny), tb  (nz1,nx  ,ny)  &
      &    ,rs  (nz1,nx  ,ny), ts  (nz1,nx  ,ny), div (nz1,nx  ,ny)  &
      &    ,a   (nz1,nx  ,ny), b   (nz1,nx  ,ny), c   (nz1,nx  ,ny)  &
      &    ,cofwz (nz1,nx,ny), coftz (nz ,nx,ny), cofwt (nz1,nx,ny)  &
-     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny), rhom  (nz1,nx,ny)  &
+     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny)                     &
      &    ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny)  &
      &    ,cofwrr(nz1,nx,ny), cofwr     (nx,ny), dhh1      (nx,ny)  &
      &    ,dhh2      (nx,ny), dhh3      (nx,ny), hh        (nx,ny)  &
      &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
      &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
      &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
+
+!      real :: rhom  (nz1,nx,ny), rrt (nz1,nx  ,ny) &
+!              ,rtt (nz1,nx  ,ny), ru1t(nz1,0:nx,ny) &
+!              ,ru2t(nz1,nx,0:ny), ru3t(nz1,0:nx,ny) &
+!              , rwt (nz1,nx  ,ny)
 
       real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
      &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
@@ -60,7 +65,12 @@
      &    ,qv1 (nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny)  &
      &    ,qv  (nz1,nx,ny), qc  (nz1,nx,ny), qr  (nz1,nx,ny)  &
      &    ,fqv (nz1,nx,ny), fqc (nz1,nx,ny), fqr (nz1,nx,ny)
-
+      
+      ! rqx,rqx1 are mass content (qx*rho)
+      ! qx, qx1 are mass mixing ratio
+      ! fqx are tendencies?
+      real, allocatable :: rqx(:,:,:,:),rqx1(:,:,:,:), qx(:,:,:,:), qx1(:,:,:,:), fqx(:,:,:,:)
+      integer :: nmoist
       real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
      &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
      &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
@@ -76,12 +86,12 @@
       common /grid/ xh, xu1, xu2, xu3, yh, yu1, yu2, yu3
 
       integer imass, rk_step, ns_rk, total_steps
-	  character*3 slice(2)
-	  character*6 plane
-	  equivalence (plane,slice)
+      character*3 slice(2)
+      character*6 plane
+      equivalence (plane,slice)
       logical second
-	  parameter(second = .true.)
-!	  parameter(second = .false.)
+      parameter(second = .true.)
+!     parameter(second = .false.)
 
       integer, PARAMETER :: IERF=6,LUNI=2,IWTY=20,IWID=1  !  PostScript
       
@@ -105,6 +115,15 @@
       real :: xht, xl, xn, xn2, xn2l, xn2m, xnu, xnus, xnus0, xnusz, xnusz0, xnut
       real :: ya, yc, yl, yht
       real :: zcent, zd, zinv, zt, ztemp
+
+      nmoist = 3
+      
+      allocate( rqx(nz1,nx,ny,nmoist),  &
+                rqx1(nz1,nx,ny,nmoist), &
+                qx(nz1,nx,ny,nmoist),   &
+                qx1(nz1,nx,ny,nmoist),  &
+                fqx(nz1,nx,ny,nmoist) )
+
 !--------------
 !
       include "initialize.inc.f90"
@@ -180,7 +199,7 @@
       end if
 !**********
 !      ns_rk = 1
-!	  dts = dt
+!     dts = dt
 !**********
       dtseps = .25*dts*(1.+epssm)
       cofrz = 2.*dtseps*rdz
@@ -188,8 +207,8 @@
       dtsd   = dts/d
       dtsf   = dts*sqrt(3.)/6.*f
       dtsg   = dts*.5/d*g
-	  xnus   = dts*xnus0
-	  xnusz  = dts*xnusz0
+      xnus   = dts*xnus0
+      xnusz  = dts*xnusz0
       do j=1,ny
          do i=1,nx
             cofwr(i,j) = dtseps*g*hh(i,j)
@@ -610,28 +629,28 @@
 !      do j=1,ny
 !         do i=1,nx
 !            do k=1,nz1
-!			   if(mod(i,2).eq.0.)  then
-!			      nyj=ny+1-j
-!c			      nyj=nyc+1-j
-!				  if(nyj.lt.1)  nyj=nyj+ny1
+!              if(mod(i,2).eq.0.)  then
+!                 nyj=ny+1-j
+!c                nyj=nyc+1-j
+!                 if(nyj.lt.1)  nyj=nyj+ny1
 !                  vdiff=abs(u2(k,i,j)+u2(k,i,nyj))
-!			   else
-!			      nyj=ny-j
-!			      nyj=nyc-j
-!				  if(nyj.lt.1)  nyj=nyj+ny1
+!              else
+!                 nyj=ny-j
+!                 nyj=nyc-j
+!                 if(nyj.lt.1)  nyj=nyj+ny1
 !                  vdiff=abs(u2(k,i,j)+u2(k,i,nyj))
-!			   end if
-!			   if(vdiff.gt.vdiffm)  then
+!              end if
+!              if(vdiff.gt.vdiffm)  then
 !                  vdiffm = vdiff
-!				  ivm=i
-!				  jvm=j
-!				  kvm=k
-!			   end if
+!                 ivm=i
+!                 jvm=j
+!                 kvm=k
+!              end if
 !            end do
 !         end do
 !c         write(6,*) j,yu2(91,j),u2(1,91,j),yu2(92,j),u2(1,92,j)
 !      end do
-!	  write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
+!     write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
 
       end if !  take step only after plotting first
 !
@@ -650,4 +669,4 @@
 
       stop
       end
-	 
+     

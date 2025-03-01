@@ -48,21 +48,24 @@
       xa    = 10000.
       ya    = 10000.
 
+! time step
 !      dt    = 6.0
       dt    = 12.0
 !      dt    = 24.0
-	  
+      
+! number of small steps
 !      ns0   = 6
       ns0   = 8
 !      ns0   = 4
-	  
+      
+! bubble temperature pert
       delt= 3.
 !      delt= 2.
 
 
       vnu   = 500.
       xnu   = vnu*dt/d**2
-	  
+      
 !c      xnu   = .015
 !c      xnu   = .008
 !c      xnu   = .012
@@ -78,9 +81,9 @@
 !      tip   = 600.
 !      tip   = 300.
       ip    = nint(tip/dt)
-	  
-!	  ip = 1
-	  
+      
+!     ip = 1
+      
       tstp  = 2.*ip*dt ! total time is 12 plotting intervals
       nz2   = nz1-1
       t0    = 300.
@@ -92,7 +95,7 @@
       g     = 9.81
       c2    = cp*rcv*t0
       cb    = 25.
-	  delt = delt/t0
+      delt = delt/t0
 
       zt    = 20000.
       zd    = 10000.
@@ -117,7 +120,7 @@
       zplb   =  0.
 !      zplt   =  zd
       zplt   =  zt
-	  wmplt  = 50.
+      wmplt  = 50.
 
       xc     = .5*xl
       yc     = .5*yl
@@ -128,8 +131,8 @@
       if(mod(nxc,2).eq.0) nxc=nxc-1
       nyc    = ny1/2+1
       dxp    = 100.*nint(sqrt(xl*yl/float(nx1*ny1))/100.)
-	  dyp    = dxp
-	  dzp    = dz
+      dyp    = dxp
+      dzp    = dz
 
       dts    = dt/float(ns0)
       dtseps = .25*dts*(1.+epssm)
@@ -159,11 +162,11 @@
 
 !*****adjustment to make mixing the same as xyz code
 !      deltax = sqrt(xl*yl/float(nx1*ny1))
-!	  write(6,*) 'deltax = ',deltax,' dz = ',dz
-!	  xnusz0 = xnus0*deltax**2/dz**2
-!	  xnus0  = xnus0*2./3.*deltax**2/d**2
+!     write(6,*) 'deltax = ',deltax,' dz = ',dz
+!     xnusz0 = xnus0*deltax**2/dz**2
+!     xnus0  = xnus0*2./3.*deltax**2/d**2
       write(6,*) 'XNU = ',xnu/dt,' XNUS = ',xnus0,' XNUSZ = ',xnusz0
-	  
+      
       iplt   = 1
       ipi    = nint(xpll/dx)+1
       ipf    = nint(xplr/dx)+1
@@ -176,7 +179,7 @@
       dtl    = dt
       zw(1)  = 0.
       ax(1)  = 0.
-	  write(6,*) 'NX = ',nx,' NXC = ',nxc,' NY = ',ny,' NYC = ',nyc
+      write(6,*) 'NX = ',nx,' NXC = ',nxc,' NY = ',ny,' NYC = ',nyc
       write(6,*) 'xa =',xa,' xl =',xl,' yl =',yl,' dt   =',dt
       write(6,*) 'zt =',zt,' zd =',zd,' xnut =',xnut
 !
@@ -278,16 +281,16 @@
          jm1 = max(j-1,1)
          if(jper*j.eq.1  )  jm1=ny1
          do i=1,nx
-	        j1  = j
-	        jn  = j
+            j1  = j
+            jn  = j
             if(mod(i,2).eq.0)  then
                jpj = j
                jpm = jm1
-	       if(jper.eq.0.and.j.eq.1 )  j1 = 2
+           if(jper.eq.0.and.j.eq.1 )  j1 = 2
             else
                jpj=jp1
                jpm=j
-	       if(jper.eq.0.and.j.eq.ny)  jn = ny1
+           if(jper.eq.0.and.j.eq.ny)  jn = ny1
             end if
             ip1 = min(i+1,nx)
             if(iper*i.eq.nx) ip1=2
@@ -434,11 +437,11 @@
 
 !         do j=1,ny
 !            do i=1,nx
-!c			   ii=i+nxc-1
-!c			   if(i.gt.nxc)  ii=nx+1-i
-!			   ii =i
-!	   	       jj=j+nyc-1
-!			   if(j.gt.nyc)  jj=ny+2-mod(i,2)-j
+!c             ii=i+nxc-1
+!c             if(i.gt.nxc)  ii=nx+1-i
+!              ii =i
+!              jj=j+nyc-1
+!              if(j.gt.nyc)  jj=ny+2-mod(i,2)-j
 !              do k=1,nz1
 !                  t  (k,i,j)=t (k,ii,jj)
 !               end do
@@ -589,6 +592,16 @@
                qv1 (k,i,j) = qvzv(k)
                rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
                rqv1(k,i,j) = qv(k,i,j)*rho(k,i,j)
+               qx  (k,i,j,1) = qvzv(k)
+               qx1 (k,i,j,1) = qvzv(k)
+               rqx (k,i,j,1) = qv(k,i,j)*rho(k,i,j)
+               rqx1(k,i,j,1) = qv(k,i,j)*rho(k,i,j)
+               
+               qx  (k,i,j,2:nmoist) = 0.0
+               qx1 (k,i,j,2:nmoist) = 0.0
+               rqx (k,i,j,2:nmoist) = 0.0
+               rqx1(k,i,j,2:nmoist) = 0.0
+               
                qc  (k,i,j) = 0.
                qr  (k,i,j) = 0.
                qc1 (k,i,j) = 0.
@@ -605,7 +618,7 @@
             rw1(nz,i,j) = 0.
          end do 
       end do 
-	  
+      
       if(iper.eq.0)  then
          do j=1,ny
             do k=1,nz1

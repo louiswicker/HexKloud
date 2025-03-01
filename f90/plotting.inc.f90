@@ -266,7 +266,7 @@
 !               call curve(x,hxpl,nx)
                call frame
 
-  122          continue
+!  122          continue
 !               go to 123
 !
 !************  y-z cross sections **********************************
@@ -429,7 +429,7 @@
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
-  123          continue
+!  123          continue
 !cc
 !               go to 124
 !
@@ -674,7 +674,7 @@
 
                end do
 
-  124          continue
+!  124          continue
 
         end if
          end if
