@@ -80,10 +80,10 @@
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
                         pltx(i,k) = .5*  &
-     &                      (t(k,ii,j  )/(1.+1.61*qv(k,ii,j  ))  &
-     &                      +t(k,ii,jp1)/(1.+1.61*qv(k,ii,jp1)))
+     &                      (t(k,ii,j  )/(1.+1.61*qx(k,ii,j  ,1))  &
+     &                      +t(k,ii,jp1)/(1.+1.61*qx(k,ii,jp1,1)))
                      else
-                        pltx(i,k) = t(k,ii,j)/(1.+1.61*qv(k,ii,j))
+                        pltx(i,k) = t(k,ii,j)/(1.+1.61*qx(k,ii,j,1))
                      end if
                      pltx(i,k) = t0*(pltx(i,k)-tz(k)) 
                   end do
@@ -220,10 +220,10 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*(.5*(qv(k,ii,j)+qv(k,ii,jp1))  &
+                        pltx(i,k) = 1000.*(.5*(qx(k,ii,j,1)+qx(k,ii,jp1,1))  &
      &                                                   -qvzv(k))
                      else
-                        pltx(i,k) = 1000.*(qv(k,ii,j)-qvzv(k))  
+                        pltx(i,k) = 1000.*(qx(k,ii,j,1)-qvzv(k))  
                      end if
                   end do
                end do
@@ -238,9 +238,9 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*.5*(qc(k,ii,j)+qc(k,ii,jp1))
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,2)+qx(k,ii,jp1,2))
                      else
-                        pltx(i,k) = 1000.*qc(k,ii,j)    
+                        pltx(i,k) = 1000.*qx(k,ii,j,2)
                      end if
                   end do
                end do
@@ -255,9 +255,9 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*.5*(qr(k,ii,j)+qr(k,ii,jp1))
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,3)+qx(k,ii,jp1,3))
                      else
-                        pltx(i,k) = 1000.*qr(k,ii,j)    
+                        pltx(i,k) = 1000.*qx(k,ii,j,3)
                      end if
                   end do
                end do
@@ -281,7 +281,7 @@
                do j=1,nypl
                   jj = j+jpi-1
                   do k=1,nz1
-                     plty(j,k) = t0*t(k,i,jj)/(1.+1.61*qv(k,i,jj))  &
+                     plty(j,k) = t0*t(k,i,jj)/(1.+1.61*qx(k,i,jj,1))  &
      &                          -t0*tz(k)
                   end do
                end do
@@ -396,7 +396,7 @@
                do j=1,nypl
                   jj = j+jpi-1
                   do k=1,nz1
-                     plty(j,k)=1000.*(qv(k,i,jj)-qvzv(k))
+                     plty(j,k)=1000.*(qx(k,i,jj,1)-qvzv(k))
                   end do
                end do
 !               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qv',plane,'p',
@@ -409,7 +409,7 @@
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
-                     plty(j,k)=1000.*qc(k,i,jj)
+                     plty(j,k)=1000.*qx(k,i,jj,2)
                   end do
                end do
 !               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qc',plane,'p',
@@ -422,7 +422,7 @@
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
-                     plty(j,k)=1000.*qr(k,i,jj)
+                     plty(j,k)=1000.*qx(k,i,jj,3)
                   end do
                end do
                call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qr',plane,'p',  &
@@ -466,12 +466,12 @@
                         jp1 =min(jj+1,ny)
                         if(jper*jj.eq.ny)  jp1 = 2
                         plt(i,j) = t0*.5*(t(k,ii,jj )  &
-     &                                  /(1.+1.61*qv(k,ii,jj ))  &
+     &                                  /(1.+1.61*qx(k,ii,jj ,1))  &
      &                                      +t(k,ii,jp1)  &
-     &                                  /(1.+1.61*qv(k,ii,jp1)))  &
+     &                                  /(1.+1.61*qx(k,ii,jp1,1)))  &
      &                            -t0*tz(k)
                      else
-                        plt(i,j) = t0*t(k,ii,jj)/(1.+1.61*qv(k,ii,jj))  &
+                        plt(i,j) = t0*t(k,ii,jj)/(1.+1.61*qx(k,ii,jj,1))  &
      &                            -t0*tz(k)
                      end if
                   end do
@@ -623,7 +623,7 @@
 !                          
                do j=1,ny
                   do i=1,nx
-                     plt(i,j) = 1000.*(qv(k,i,j)-qvzv(k))
+                     plt(i,j) = 1000.*(qx(k,i,j,1)-qvzv(k))
                   end do
                end do
 
@@ -635,7 +635,7 @@
 !                          
                do j=1,ny
                   do i=1,nx
-                     plt(i,j) = 1000.*qc(k,i,j)
+                     plt(i,j) = 1000.*qx(k,i,j,2)
                   end do
                end do
 
@@ -662,9 +662,9 @@
                      if(mod(ii,2).eq.0.)  then
                         jp1 =min(jj+1,ny)
                         if(jper*jj.eq.ny)  jp1 = 2
-                        plt(i,j) = 1000.*.5*(qr(k,ii,jj)+qr(k,ii,jp1))
+                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,3)+qx(k,ii,jp1,3))
                      else
-                        plt(i,j) = 1000.*qr(k,ii,jj)
+                        plt(i,j) = 1000.*qx(k,ii,jj,3)
                      end if
                   end do
                end do

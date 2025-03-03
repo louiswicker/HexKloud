@@ -2,19 +2,19 @@
 !-----------------------------------------------------------------------
 !                                                                     72
       subroutine rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,  &
-     &                  rcv,rb,rqv,rqc,rqr,rqvb,dtsa,g,ds,dts,   &
+     &                  rcv,rb,rqx,nmoist,rqvb,dtsa,g,ds,dts,   &
      &                  rdz,f,xnus,xnusz,nz1,nx,ny,iper,         &
      &                  jper,flux1,flux2,flux3,fluxz,order)
 
       implicit none
 
-      integer nz1,nx,ny,iper,jper
+      integer nz1,nx,ny,iper,jper,nmoist
       real    w    (nz1+1,nx,ny),fw   (nz1,nx,  ny),rho  (nz1,nx,ny)  &
      &       ,w1   (nz1+1,nx,ny),p    (nz1,nx,  ny),pb   (nz1,nx,ny)  &
      &       ,ww   (nz1+1,nx,ny),rt   (nz1,nx,  ny),rtb  (nz1,nx,ny)  &
      &       ,ru1  (nz1,0:nx,ny),ru2  (nz1,nx,0:ny),rb   (nz1,nx,ny)  &
-     &       ,ru3  (nz1,0:nx,ny),rqv  (nz1,  nx,ny),rqc  (nz1,nx,ny)  &
-     &       ,rqr  (nz1,  nx,ny),ds   (nz1)        ,rqvb (nz1)  &
+     &       ,ru3  (nz1,0:nx,ny),rqx  (nz1,  nx,ny,nmoist)            &
+     &       ,ds   (nz1)        ,rqvb (nz1)  &
      &       ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny)  &
      &       ,fluxz(0:nz1,nx,ny),rcv,dts,dtsa,g,rdz,f,xnus,xnusz,cmoist
 
@@ -204,16 +204,18 @@
             do k=2,nz1
                cmoist = 0.5*(rho(k,i,j)+rho(k-1,i,j))*  &
      &            (rb (k  ,i,j)+rb (k-1,i,j)+rqvb(k)+rqvb(k-1))/  &
-     &            (rho(k  ,i,j)+rqv(k  ,i,j)+rqc(k  ,i,j)+rqr(k  ,i,j)+  &
-     &             rho(k-1,i,j)+rqv(k-1,i,j)+rqc(k-1,i,j)+rqr(k-1,i,j))
+!     &            (rho(k  ,i,j)+rqv(k  ,i,j)+rqc(k  ,i,j)+rqr(k  ,i,j)+  &
+     &            (rho(k  ,i,j)+ Sum(rqx(k  ,i,j,1:nmoist)) +  &
+!     &             rho(k-1,i,j)+rqv(k-1,i,j)+rqc(k-1,i,j)+rqr(k-1,i,j))
+     &             rho(k-1,i,j)+Sum(rqx(k-1,i,j,1:nmoist)))
                fw(k,i,j ) = fw(k,i,j) + 0.5*dts*g*cmoist*  &
      &                      ( ((p(k  ,i,j)-pb(k  ,i,j))/pb (k  ,i,j)  &
      &                                -rcv*rt(k  ,i,j) /rtb(k  ,i,j))  &
      &                      + ((p(k-1,i,j)-pb(k-1,i,j))/pb (k-1,i,j)  &
      &                                -rcv*rt(k-1,i,j)/ rtb(k-1,i,j))  &
-     &           -(rqv(k  ,i,j)-rqvb(k  )+rqc(k  ,i,j)+ rqr(k  ,i,j))  &
+     &           -(Sum(rqx(k  ,i,j,1:nmoist))-rqvb(k  ))  &
      &            /(rb(k  ,i,j)+rqvb(k))                            &
-     &           -(rqv(k-1,i,j)-rqvb(k-1)+rqc(k-1,i,j)+ rqr(k-1,i,j))  &
+     &           -(Sum(rqx(k-1,i,j,1:nmoist))-rqvb(k-1))  &
      &            /(rb(k-1,i,j)+rqvb(k-1))                       )  
             end do
          end do

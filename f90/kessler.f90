@@ -1,12 +1,12 @@
 !                                                                     72
 !-----------------------------------------------------------------------
 !
-      subroutine kessler_joe( t1t, qv1t, qc1t, qc1, qr1t, qr1,  &
+      subroutine kessler_joe( t1t, qv1t, qc1, qr1,  &
      &                        rho, pii, dt, dz, nz1, ny, nx         )
 
       integer nx, ny, nz1
-      real t1t (nz1,nx,ny), qv1t(nz1,nx,ny), qc1t(nz1,nx,ny),   &
-     &     qr1t(nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny),  &
+      real t1t (nz1,nx,ny), qv1t(nz1,nx,ny),    &
+     &     qc1 (nz1,nx,ny), qr1 (nz1,nx,ny),  &
      &     rho (nz1,nx,ny), pii (nz1,nx,ny)
       integer mz
       parameter( mz=200 )
@@ -45,8 +45,8 @@
          do i=1,nx
 !
             DO K=1,NZ1
-               QRPROD(K) = QC1T(K,i,j)  &
-     &               -(QC1T(K,i,j)-DTL*AMAX1(ACKESS*(QC1(K,i,j)-.001),  &
+               QRPROD(K) = qc1(K,i,j)  &
+     &               -(qc1(K,i,j)-DTL*AMAX1(ACKESS*(QC1(K,i,j)-.001),  &
      &                     0.))/(1.+DTL*CKESS*QR1(K,i,j)**.875)
 !cc???         VELQR(K)  = (QR(K,i,j)*R(K))**1.1364*RHALF(K)
                VELQR(K)  = (QR1(K,i,j)*R(K))**1.1364*RHALF(K)
@@ -55,36 +55,36 @@
             END DO
             VELU        = (QR1(2,i,j)*R(2))**1.1364*RHALF(2)
             VELD        = (QR1(1,i,j)*R(1))**1.1364*RHALF(1)
-            QR1T(1,i,j) = QR1T(1,i,j)+DTL*(VELU-VELD)*FVEL/(R(1)*DZ)
+            qr1(1,i,j) = qr1(1,i,j)+DTL*(VELU-VELD)*FVEL/(R(1)*DZ)
             DO K=2,NZ2
-               QR1T(K,i,j) =QR1T(K,i,j)+DTL*FVEL*(VELQR(K+1)-VELQR(K-1))  &
+               qr1(K,i,j) =qr1(K,i,j)+DTL*FVEL*(VELQR(K+1)-VELQR(K-1))  &
      &                                 /(R(K  )*DZ*(1.+1.))
-!c             QR1T(K,i,j) = QR1T(K,i)+DTL*FVEL*(VELQR(K+1)-VELQR(K))
+!c             qr1(K,i,j) = qr1(K,i)+DTL*FVEL*(VELQR(K+1)-VELQR(K))
 !c   &                                 /(R(K  )*DZ)
             END DO
-            QR1T(NZ1,i,j)  = QR1T(NZ1,i,j)-DTL*FVEL*VELQR(NZ2)  &
+            qr1(NZ1,i,j)  = qr1(NZ1,i,j)-DTL*FVEL*VELQR(NZ2)  &
      &                                 /(R(NZ1)*DZ*(1.+1.))
             ARTEMP     = 36340.*(.5*(VELQR(2)+VELQR(1))+VELD-VELU)
             ARTOT      = ARTOT+DTD*ARTEMP
             DO K=1,NZ1
-               QC1T(K,i,j) = AMAX1(QC1T(K,i,j)-QRPROD(K),0.)
-               QR1T(K,i,j) = AMAX1(QR1T(K,i,j)+QRPROD(K),0.)
+               qc1(K,i,j) = AMAX1(qc1(K,i,j)-QRPROD(K),0.)
+               qr1(K,i,j) = AMAX1(qr1(K,i,j)+QRPROD(K),0.)
                PROD(K)     = (QV1T(K,i,j)-QVS(K))/(1.+QVS(K)*F5  &
      &                             /(PK(K)*T1T(K,i,j)-36.)**2)
             END DO
             DO K=1,NZ1
-               ERN(K)=AMIN1(DTLC*(((1.6+124.9*(R(K)*QR1T(K,i,j))**.2046)  &
-     &               *(R(K)*QR1T(K,i,j))**.525)/(2.55E6*PC(K)  &
+               ERN(K)=AMIN1(DTLC*(((1.6+124.9*(R(K)*qr1(K,i,j))**.2046)  &
+     &               *(R(K)*qr1(K,i,j))**.525)/(2.55E6*PC(K)  &
      &               /(3.8 *QVS(K))+5.4E5))*(DIM(QVS(K),QV1T(K,i,j))  &
      &               /(R(K)*QVS(K))),  &
-     &                AMAX1(-PROD(K)-QC1T(K,i,j),0.),QR1T(K,i,j))
+     &                AMAX1(-PROD(K)-qc1(K,i,j),0.),qr1(K,i,j))
             END DO
             DO K=1,NZ1
-               BUOYCY(K)   = F0(K)*(AMAX1(PROD(K),-QC1T(K,i,j))-ERN(K))
+               BUOYCY(K)   = F0(K)*(AMAX1(PROD(K),-qc1(K,i,j))-ERN(K))
                QV1T(K,i,j) = AMAX1(QV1T(K,i,j)  &
-     &                        -AMAX1(PROD(K),-QC1T(K,i,j))+ERN(K),0.)
-               QC1T(K,i,j) = QC1T(K,i,j)+AMAX1(PROD(K),-QC1T(K,i,j))
-               QR1T(K,i,j) = QR1T(K,i,j)-ERN(K)
+     &                        -AMAX1(PROD(K),-qc1(K,i,j))+ERN(K),0.)
+               qc1(K,i,j) = qc1(K,i,j)+AMAX1(PROD(K),-qc1(K,i,j))
+               qr1(K,i,j) = qr1(K,i,j)-ERN(K)
                T1T (K,i,j) = T1T (K,i,j)+BUOYCY(K)
             END DO
          end do

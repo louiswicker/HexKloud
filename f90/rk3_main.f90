@@ -60,17 +60,18 @@
      &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)  &
      &    ,t_d_tend (nz1,nx  ,ny)
 
-      real rqv (nz1,nx,ny), rqc(nz1,nx,ny) , rqr (nz1,nx,ny)  &
-     &    ,rqv1(nz1,nx,ny), rqc1(nz1,nx,ny), rqr1(nz1,nx,ny)  &
-     &    ,qv1 (nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny)  &
-     &    ,qv  (nz1,nx,ny), qc  (nz1,nx,ny), qr  (nz1,nx,ny)  &
-     &    ,fqv (nz1,nx,ny), fqc (nz1,nx,ny), fqr (nz1,nx,ny)
+!       real rqv (nz1,nx,ny), rqc(nz1,nx,ny) , rqr (nz1,nx,ny)  &
+!      &    ,rqv1(nz1,nx,ny), rqc1(nz1,nx,ny), rqr1(nz1,nx,ny)  &
+!      &    ,qv1 (nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny)  &
+!      &    ,qv  (nz1,nx,ny), qc  (nz1,nx,ny), qr  (nz1,nx,ny)  &
+!      &    ,fqv (nz1,nx,ny), fqc (nz1,nx,ny), fqr (nz1,nx,ny)
       
       ! rqx,rqx1 are mass content (qx*rho)
       ! qx, qx1 are mass mixing ratio
       ! fqx are tendencies?
       real, allocatable :: rqx(:,:,:,:),rqx1(:,:,:,:), qx(:,:,:,:), qx1(:,:,:,:), fqx(:,:,:,:)
-      integer :: nmoist
+      real, allocatable :: rsx(:,:,:,:),rsx1(:,:,:,:), sx(:,:,:,:), sx1(:,:,:,:), fsx(:,:,:,:)
+      integer :: nmoist,nscalar
       real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
      &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
      &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
@@ -100,7 +101,7 @@
       real :: dtseps, dtsf, dtsg
       real :: dx, dy, dz
       real :: epssm, f, fac1, fura, g, hm
-      integer :: i, ii, im1, ip, ip1, iper, ipf, ipi, iplt, ipp
+      integer :: i, ii, im1, ip, ip1, iper, ipf, ipi, iplt, ipp, n
       integer :: itr, ittrm, iwmax
       integer :: j, j1, jj, jm1, jn, jp1, jper, jpf, jpi, jpj, jpm, jpp, jv1, jwmax
       integer :: k, kk, kkk, km1, kwmax, nit, npl, npr, ns, ns0
@@ -117,12 +118,27 @@
       real :: zcent, zd, zinv, zt, ztemp
 
       nmoist = 3
+      nscalar = 0
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
                 qx(nz1,nx,ny,nmoist),   &
                 qx1(nz1,nx,ny,nmoist),  &
                 fqx(nz1,nx,ny,nmoist) )
+
+      if ( nscalar > 0 ) then
+        allocate( rsx(nz1,nx,ny,nscalar),  &
+                 rsx1(nz1,nx,ny,nscalar), &
+                 sx(nz1,nx,ny,nscalar),   &
+                 sx1(nz1,nx,ny,nscalar),  &
+                 fsx(nz1,nx,ny,nscalar) )
+      else
+        allocate( rsx(1,1,1,1),  &
+                 rsx1(1,1,1,1), &
+                 sx(1,1,1,1),   &
+                 sx1(1,1,1,1),  &
+                 fsx(1,1,1,1) )
+      endif
 
 !--------------
 !
@@ -260,26 +276,43 @@
      &             u3m,ds,dtsa,dtsd,dtsf,dts,c1f,c2f,rdz,xnus,xnusz,  &
      &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,'fifth ')
 
-         call rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,rcv,rb,rqv,  &
-     &               rqc,rqr,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
+!         call rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,rcv,rb,rqv,  &
+!     &               rqc,rqr,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
+!     &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,'fifth ')
+         call rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,rcv,rb,rqx,  &
+     &               nmoist,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
      &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,'fifth ')
 
          call rhs_s( t ,t1 ,ft ,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
      &               ti,nz1,nx,ny,flux1,flux2,flux3,fluxz,'fifth ')
 
-         call rhs_s( qv,qv1,fqv,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+! qv
+         call rhs_s( qx(1,1,1,1),qx1(1,1,1,1),fqx(1,1,1,1),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
      &               qvzv,nz1,1,1,flux1,flux2,flux3,fluxz,'fifth ')
 
-         call rhs_s( qc,qc1,fqc,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+! other mixing ratios
+         do n = 2,nmoist
+           call rhs_s( qx(1,1,1,n),qx1(1,1,1,n),fqx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,'fifth ')
+         enddo
+!          call rhs_s( qc,qc1,fqc,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+!      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
+!      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,'fifth ')
+! 
+!          call rhs_s( qr,qr1,fqr,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+!      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
+!      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,'fifth ')
 
-         call rhs_s( qr,qr1,fqr,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+
+! other scalars
+         do n = 1,nscalar
+           call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,'fifth ')
-
+         enddo
 
          call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz,  &
      &                 nz1,nx,ny,iper,jper      )
@@ -296,9 +329,15 @@
          do j=1,ny
             do i=1,nx
                do k=1,nz1
-                  rqv(k,i,j) = amax1(rqv1(k,i,j) + ns_rk*fqv(k,i,j),0.0)
-                  rqc(k,i,j) = amax1(rqc1(k,i,j) + ns_rk*fqc(k,i,j),0.0)
-                  rqr(k,i,j) = amax1(rqr1(k,i,j) + ns_rk*fqr(k,i,j),0.0)
+                  do n = 1,nmoist
+                    rqx(k,i,j,n) = amax1(rqx1(k,i,j,n) + ns_rk*fqx(k,i,j,n),0.0)
+                  enddo
+                  do n = 1,nscalar
+                    rsx(k,i,j,n) = amax1(rsx1(k,i,j,n) + ns_rk*fsx(k,i,j,n),0.0)
+                  enddo
+!                   rqv(k,i,j) = amax1(rqv1(k,i,j) + ns_rk*fqv(k,i,j),0.0)
+!                   rqc(k,i,j) = amax1(rqc1(k,i,j) + ns_rk*fqc(k,i,j),0.0)
+!                   rqr(k,i,j) = amax1(rqr1(k,i,j) + ns_rk*fqr(k,i,j),0.0)
                end do
             end do
          end do
@@ -318,7 +357,7 @@
 !        coefficients for tri-diagonal matrix and do small steps
 !
          call calc_scoef( dtseps, c2, hh, rdz, t, p, tb,   &
-     &                       rho, rb, rqv, rqc, rqr, rqvb,  &
+     &                       rho, rb, rqx, nmoist, rqvb,  &
      &                       g, rcv, cofwz, coftz, cofwt,  &
      &                       cofwr, cofwrr, cofrz,  &
      &                       a, b, c, alpha, gamma, nx,ny,nz1    )
@@ -401,9 +440,13 @@
                      t (k,i,j) = (rtb(k,i,j)+rt(k,i,j))/rho(k,i,j)
                      p (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j))  &
      &                                   /(100000./287./300.) )**rcv
-                     qv(k,i,j) = rqv(k,i,j)/rho(k,i,j)
-                     qc(k,i,j) = rqc(k,i,j)/rho(k,i,j)
-                     qr(k,i,j) = rqr(k,i,j)/rho(k,i,j)
+                     do n = 1,nmoist
+                       qx(k,i,j,n) = rqx(k,i,j,n)/rho(k,i,j)
+                     enddo
+
+!                      qv(k,i,j) = rqv(k,i,j)/rho(k,i,j)
+!                      qc(k,i,j) = rqc(k,i,j)/rho(k,i,j)
+!                      qr(k,i,j) = rqr(k,i,j)/rho(k,i,j)
 
                   end do
 
@@ -505,17 +548,25 @@
                      t1 (k,i,j) = t(k,i,j)
                      p  (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j))  &
      &                                   /(100000./287./300.) )**rcv
-                     qv (k,i,j) = rqv(k,i,j)/rho(k,i,j)
-                     qc (k,i,j) = rqc(k,i,j)/rho(k,i,j)
-                     qr (k,i,j) = rqr(k,i,j)/rho(k,i,j)
+                     do n = 1,nmoist
+                       qx(k,i,j,n) = rqx(k,i,j,n)/rho(k,i,j)
+                     enddo
 
-                     qv1(k,i,j) = qv(k,i,j)
+!                      qv (k,i,j) = rqv(k,i,j)/rho(k,i,j)
+!                      qc (k,i,j) = rqc(k,i,j)/rho(k,i,j)
+!                      qr (k,i,j) = rqr(k,i,j)/rho(k,i,j)
+
+                     qx1(k,i,j,1) = qx(k,i,j,1) ! qv
+!                     qv1(k,i,j) = qv(k,i,j)
 !                    qc1(k,i,j) = qc(k,i,j)
 !                    qr1(k,i,j) = qr(k,i,j)
 
-                     rqv1(k,i,j) = rqv(k,i,j)
-                     rqc1(k,i,j) = rqc(k,i,j)
-                     rqr1(k,i,j) = rqr(k,i,j)
+                     do n = 1,nmoist
+                       rqx1(k,i,j,n) = rqx(k,i,j,n)
+                     enddo
+!                      rqv1(k,i,j) = rqv(k,i,j)
+!                      rqc1(k,i,j) = rqc(k,i,j)
+!                      rqr1(k,i,j) = rqr(k,i,j)
                
                   end do
 
@@ -574,7 +625,7 @@
          do i=1,nx
             do k=1,nz1
                t_d_tend(k,i,j) = t(k,i,j)
-               t       (k,i,j) = t0*t(k,i,j)/(1.+1.61*qv(k,i,j))
+               t       (k,i,j) = t0*t(k,i,j)/(1.+1.61*qx(k,i,j,1))
             end do
          end do
       end do
@@ -584,31 +635,37 @@
 !      call kessler( t, qv, qc, qc1, qr, qr1, rb, pb,
 !     *              dt, dz, nz1, nx, ny                  )
 !c    call kessler_joe( t, qv, qc, qc1, qr, qr1, rho, pb,
-      call kessler_joe( t, qv, qc, qc, qr, qr, rho, pb,  &
+      call kessler_joe( t, qx(1,1,1,1), qx(1,1,1,2), qx(1,1,1,3), rho, pb,  & ! 1=qv, 2=qc, 3=qr
      &              dt, dz, nz1, nx, ny                  )
 
       do j=1,ny
          do i=1,nx
             do k=1,nz1
 
-               t   (k,i,j) = t(k,i,j)*(1.+1.61*qv(k,i,j))/t0 
+               t   (k,i,j) = t(k,i,j)*(1.+1.61*qx(k,i,j,1))/t0 
                t_d_tend(k,i,j) = (t(k,i,j) - t_d_tend(k,i,j))/(ns*dts)
 !c             t_d_tend(k,i,j) = 0.
                t1  (k,i,j) = t(k,i,j)
                rt  (k,i,j) = t(k,i,j)*rho(k,i,j) - rtb(k,i,j)
                rt1 (k,i,j) = rt(k,i,j)
         
-               rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
-               rqv1(k,i,j) = rqv(k,i,j)
-               qv1 (k,i,j) = qv(k,i,j)
+               do n = 1,nmoist
+                 rqx (k,i,j,n) = qx(k,i,j,n)*rho(k,i,j)
+                 rqx1(k,i,j,n) = rqx(k,i,j,n)
+                 qx1 (k,i,j,n) = qx(k,i,j,n)
+               enddo
 
-               rqc (k,i,j) = qc(k,i,j)*rho(k,i,j)
-               rqc1(k,i,j) = rqc(k,i,j)
-               qc1 (k,i,j) = qc(k,i,j)
-
-               rqr (k,i,j) = qr(k,i,j)*rho(k,i,j)
-               rqr1(k,i,j) = rqr(k,i,j)
-               qr1 (k,i,j) = qr(k,i,j)
+!                rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
+!                rqv1(k,i,j) = rqv(k,i,j)
+!                qv1 (k,i,j) = qv(k,i,j)
+! 
+!                rqc (k,i,j) = qc(k,i,j)*rho(k,i,j)
+!                rqc1(k,i,j) = rqc(k,i,j)
+!                qc1 (k,i,j) = qc(k,i,j)
+! 
+!                rqr (k,i,j) = qr(k,i,j)*rho(k,i,j)
+!                rqr1(k,i,j) = rqr(k,i,j)
+!                qr1 (k,i,j) = qr(k,i,j)
 
                p   (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j))  &
      &                               /(100000./287./300.))**rcv

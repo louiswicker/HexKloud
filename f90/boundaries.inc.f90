@@ -16,15 +16,28 @@
                   ft (k,i,j) = ft (k,i,j)  &
      &                          - dts*rdx*(ub*(t1 (k,i+1,j)-t1 (k,i,j))  &
      &                             +t (k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqv(k,i,j) = fqv(k,i,j)   &
-     &                          - dts*rdx*(ub*(qv1(k,i+1,j)-qv1(k,i,j))  &
-     &                             +qv(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqc(k,i,j) = fqc(k,i,j)   &
-     &                          - dts*rdx*(ub*(qc1(k,i+1,j)-qc1(k,i,j))  &
-     &                             +qc(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqr(k,i,j) = fqr(k,i,j)  &
-     &                          - dts*rdx*(ub*(qr1(k,i+1,j)-qr1(k,i,j))  &
-     &                             +qr(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+
+                do n = 1,nmoist
+                  fqx(k,i,j,n) = fqx(k,i,j,n)   &
+     &                          - dts*rdx*(ub*(qx1(k,i+1,j,n)-qx1(k,i,j,n))  &
+     &                             +qx(k,i,j,1)*(ru1(k,i,j)-ru1(k,i-1,j)))
+                enddo
+
+                do n = 1,nscalar
+                  fsx(k,i,j,n) = fsx(k,i,j,n)   &
+     &                          - dts*rdx*(ub*(sx1(k,i+1,j,n)-sx1(k,i,j,n))  &
+     &                             +sx(k,i,j,1)*(ru1(k,i,j)-ru1(k,i-1,j)))
+                enddo
+
+!                   fqv(k,i,j) = fqv(k,i,j)   &
+!      &                          - dts*rdx*(ub*(qv1(k,i+1,j)-qv1(k,i,j))  &
+!      &                             +qv(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+!                   fqc(k,i,j) = fqc(k,i,j)   &
+!      &                          - dts*rdx*(ub*(qc1(k,i+1,j)-qc1(k,i,j))  &
+!      &                             +qc(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+!                   fqr(k,i,j) = fqr(k,i,j)  &
+!      &                          - dts*rdx*(ub*(qr1(k,i+1,j)-qr1(k,i,j))  &
+!      &                             +qr(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
                end do
             end do
             do j=1,ny1+jper
@@ -70,15 +83,29 @@
                   ft (k,i,j) = ft (k,i,j)  &
      &                          - dts*rdx*(ub*(t1 (k,i,j)-t1 (k,i-1,j))  &
      &                             +t (k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqv(k,i,j) = fqv(k,i,j)   &
-     &                          - dts*rdx*(ub*(qv1(k,i,j)-qv1(k,i-1,j))  &
-     &                             +qv(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqc(k,i,j) = fqc(k,i,j)   &
-     &                          - dts*rdx*(ub*(qc1(k,i,j)-qc1(k,i-1,j))  &
-     &                             +qc(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
-                  fqr(k,i,j) = fqr(k,i,j)  &
-     &                          - dts*rdx*(ub*(qr1(k,i,j)-qr1(k,i-1,j))  &
-     &                             +qr(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+
+                do n = 1,nmoist
+                  fqx(k,i,j,n) = fqx(k,i,j,n)   &
+     &                          - dts*rdx*(ub*(qx1(k,i,j,n)-qx1(k,i-1,j,n))  &
+     &                             +qx(k,i,j,n)*(ru1(k,i,j)-ru1(k,i-1,j)))
+                enddo
+
+                do n = 1,nscalar
+                  fsx(k,i,j,n) = fsx(k,i,j,n)   &
+     &                          - dts*rdx*(ub*(sx1(k,i,j,n)-sx1(k,i-1,j,n))  &
+     &                             +sx(k,i,j,n)*(ru1(k,i,j)-ru1(k,i-1,j)))
+                enddo
+
+! 
+!                   fqv(k,i,j) = fqv(k,i,j)   &
+!      &                          - dts*rdx*(ub*(qv1(k,i,j)-qv1(k,i-1,j))  &
+!      &                             +qv(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+!                   fqc(k,i,j) = fqc(k,i,j)   &
+!      &                          - dts*rdx*(ub*(qc1(k,i,j)-qc1(k,i-1,j))  &
+!      &                             +qc(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
+!                   fqr(k,i,j) = fqr(k,i,j)  &
+!      &                          - dts*rdx*(ub*(qr1(k,i,j)-qr1(k,i-1,j))  &
+!      &                             +qr(k,i,j)*(ru1(k,i,j)-ru1(k,i-1,j)))
                end do
             end do
             do j=1,ny1+jper
@@ -170,15 +197,28 @@
                   ft (k,i,j) = ft (k,i,j)  &
      &                          - dts*rdy*(ub*(t1 (k,i,j+1)-t1 (k,i,j))  &
      &                             +t (k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqv(k,i,j) = fqv(k,i,j)   &
-     &                          - dts*rdy*(ub*(qv1(k,i,j+1)-qv1(k,i,j))  &
-     &                             +qv(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqc(k,i,j) = fqc(k,i,j)   &
-     &                          - dts*rdy*(ub*(qc1(k,i,j+1)-qc1(k,i,j))  &
-     &                             +qc(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqr(k,i,j) = fqr(k,i,j)  &
-     &                          - dts*rdy*(ub*(qr1(k,i,j+1)-qr1(k,i,j))  &
-     &                             +qr(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+
+                do n = 1,nmoist
+                  fqx(k,i,j,n) = fqx(k,i,j,n)   &
+     &                          - dts*rdy*(ub*(qx1(k,i,j+1,n)-qx1(k,i,j,n))  &
+     &                             +qx(k,i,j,n)*(ru2(k,i,j)-ru2(k,i,j-1)))
+                enddo
+
+                do n = 1,nscalar
+                  fsx(k,i,j,n) = fsx(k,i,j,n)   &
+     &                          - dts*rdy*(ub*(sx1(k,i,j+1,n)-sx1(k,i,j,n))  &
+     &                             +sx(k,i,j,n)*(ru2(k,i,j)-ru2(k,i,j-1)))
+                enddo
+
+!                   fqv(k,i,j) = fqv(k,i,j)   &
+!      &                          - dts*rdy*(ub*(qv1(k,i,j+1)-qv1(k,i,j))  &
+!      &                             +qv(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+!                   fqc(k,i,j) = fqc(k,i,j)   &
+!      &                          - dts*rdy*(ub*(qc1(k,i,j+1)-qc1(k,i,j))  &
+!      &                             +qc(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+!                   fqr(k,i,j) = fqr(k,i,j)  &
+!      &                          - dts*rdy*(ub*(qr1(k,i,j+1)-qr1(k,i,j))  &
+!      &                             +qr(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
                end do
             end do
             do i=1,nx1+iper
@@ -224,15 +264,22 @@
                   ft (k,i,j) = ft (k,i,j)  &
      &                          - dts*rdy*(ub*(t1 (k,i,j)-t1 (k,i,j-1))  &
      &                             +t (k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqv(k,i,j) = fqv(k,i,j)   &
-     &                          - dts*rdy*(ub*(qv1(k,i,j)-qv1(k,i,j-1))  &
-     &                             +qv(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqc(k,i,j) = fqc(k,i,j)   &
-     &                          - dts*rdy*(ub*(qc1(k,i,j)-qc1(k,i,j-1))  &
-     &                             +qc(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
-                  fqr(k,i,j) = fqr(k,i,j)  &
-     &                          - dts*rdy*(ub*(qr1(k,i,j)-qr1(k,i,j-1))  &
-     &                             +qr(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+               ! fqx separate loop on nmoist,k?
+                 do n = 1,nmoist
+                  fqx(k,i,j,n) = fqx(k,i,j,n)   &
+     &                          - dts*rdy*(ub*(qx1(k,i,j,n)-qx1(k,i,j-1,n))  &
+     &                             +qx(k,i,j,n)*(ru2(k,i,j)-ru2(k,i,j-1)))
+                 enddo
+
+!                   fqv(k,i,j) = fqv(k,i,j)   &
+!      &                          - dts*rdy*(ub*(qv1(k,i,j)-qv1(k,i,j-1))  &
+!      &                             +qv(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+!                   fqc(k,i,j) = fqc(k,i,j)   &
+!      &                          - dts*rdy*(ub*(qc1(k,i,j)-qc1(k,i,j-1))  &
+!      &                             +qc(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
+!                   fqr(k,i,j) = fqr(k,i,j)  &
+!      &                          - dts*rdy*(ub*(qr1(k,i,j)-qr1(k,i,j-1))  &
+!      &                             +qr(k,i,j)*(ru2(k,i,j)-ru2(k,i,j-1)))
                end do
             end do
             do i=1,nx1+iper

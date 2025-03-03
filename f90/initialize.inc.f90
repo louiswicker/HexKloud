@@ -77,14 +77,14 @@
 !      smdiv = .0
       epssm = .1
 
-      tip   = 60. ! plotting interval
+      tip   = 300. ! plotting interval in seconds
 !      tip   = 600.
 !      tip   = 300.
       ip    = nint(tip/dt)
       
 !     ip = 1
       
-      tstp  = 2.*ip*dt ! total time is 12 plotting intervals
+      tstp  = 6.*ip*dt ! total time is 12 plotting intervals
       nz2   = nz1-1
       t0    = 300.
       r     = 287.
@@ -588,28 +588,28 @@
                rt1 (k,i,j) = rt (k,i,j)
                rr1 (k,i,j) = rr(k,i,j)
                div (k,i,j) = 0.
-               qv  (k,i,j) = qvzv(k)
-               qv1 (k,i,j) = qvzv(k)
-               rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
-               rqv1(k,i,j) = qv(k,i,j)*rho(k,i,j)
+!               qv  (k,i,j) = qvzv(k)
+!               qv1 (k,i,j) = qvzv(k)
+!               rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
+!               rqv1(k,i,j) = qv(k,i,j)*rho(k,i,j)
                qx  (k,i,j,1) = qvzv(k)
                qx1 (k,i,j,1) = qvzv(k)
-               rqx (k,i,j,1) = qv(k,i,j)*rho(k,i,j)
-               rqx1(k,i,j,1) = qv(k,i,j)*rho(k,i,j)
+               rqx (k,i,j,1) = qx(k,i,j,1)*rho(k,i,j)
+               rqx1(k,i,j,1) = qx(k,i,j,1)*rho(k,i,j)
                
                qx  (k,i,j,2:nmoist) = 0.0
                qx1 (k,i,j,2:nmoist) = 0.0
                rqx (k,i,j,2:nmoist) = 0.0
                rqx1(k,i,j,2:nmoist) = 0.0
-               
-               qc  (k,i,j) = 0.
-               qr  (k,i,j) = 0.
-               qc1 (k,i,j) = 0.
-               qr1 (k,i,j) = 0.
-               rqc (k,i,j) = 0.
-               rqr (k,i,j) = 0.
-               rqc1(k,i,j) = 0.
-               rqr1(k,i,j) = 0.   
+
+!               qc  (k,i,j) = 0.
+!               qr  (k,i,j) = 0.
+!               qc1 (k,i,j) = 0.
+!               qr1 (k,i,j) = 0.
+!               rqc (k,i,j) = 0.
+!               rqr (k,i,j) = 0.
+!               rqc1(k,i,j) = 0.
+!               rqr1(k,i,j) = 0.   
             end do
             w  (nz,i,j) = 0.
             w1 (nz,i,j) = 0.
@@ -618,6 +618,11 @@
             rw1(nz,i,j) = 0.
          end do 
       end do 
+
+               sx  (:,:,:,:) = 0.0
+               sx1 (:,:,:,:) = 0.0
+               rsx (:,:,:,:) = 0.0
+               rsx1(:,:,:,:) = 0.0
       
       if(iper.eq.0)  then
          do j=1,ny
