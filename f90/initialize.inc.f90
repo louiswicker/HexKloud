@@ -90,7 +90,7 @@
       
 !     ip = 1
       
-      tstp  = 6.*ip*dt ! total time is 12 plotting intervals
+      tstp  = 12.*ip*dt ! total time is 12 plotting intervals
       nz2   = nz1-1
       t0    = 300.
       r     = 287.

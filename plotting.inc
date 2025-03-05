@@ -21,7 +21,7 @@ c                                                                     72
             print 901 ,time
   901       format(1h ,'time =',f10.1)
             kkk=0
- 111        continue
+! 111        continue
             rtot=0.
             do j=1,ny-jper
                do i=1,nx-iper
@@ -54,7 +54,7 @@ c
 c************  Maximum vertical velocity
 c
         call wplot(wmax,waxis,wmplt,ip,nit+1,total_steps)
-		write(6,*) IWMAX,JWMAX,KWMAX,WMAX(nit+1)
+		write(6,*) 'i,j,k,wmax: ', IWMAX,JWMAX,KWMAX,WMAX(nit+1)
 		
 c            go to 122
 

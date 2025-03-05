@@ -74,13 +74,13 @@ c      xnu   = .0
 c      smdiv = .0
       epssm = .1
 
-      tip   = 600.
-c      tip   = 300.
+      tip   = 300. ! plotting interval
+
       ip    = nint(tip/dt)
 	  
 c	  ip = 1
 	  
-      tstp  = 12.*ip*dt
+      tstp  = 12.*ip*dt ! total time is 12 plotting intervals
       nz2   = nz1-1
       t0    = 300.
       r     = 287.
@@ -641,7 +641,19 @@ c----------------------------------------------------------
          end do
       end do
       if(iplt.eq.1)   then
+        IF ( .true. ) THEN
+C
+C Open GKS.
+C
+        CALL GOPKS (IERF,0)
+        CALL GOPWK (IWID,LUNI,IWTY)
+        CALL GACWK (IWID)
+
+         ELSE
+
          call opngks
+
+         ENDIF
          call frame
       end if
       kkk  = 0
