@@ -81,6 +81,8 @@ c     &              yh(nx,ny), yu1(nx,ny), yu2(nx,ny), yu3(nx,ny)
       logical second
 	  parameter(second = .true.)
 c	  parameter(second = .false.)
+
+      integer, PARAMETER :: IERF=6,LUNI=2,IWTY=20,IWID=1  !  PostScript
 c--------------
 c
       include "initialize.inc"
@@ -106,6 +108,7 @@ c
       tinit =.05*xa
       if(npr.eq.1)  then
          write(6,*) time, wmax(nit)
+         write(0,*) time, wmax(nit)
          npr=0
       end if
 
