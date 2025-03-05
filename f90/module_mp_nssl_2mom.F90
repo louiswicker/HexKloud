@@ -2812,6 +2812,12 @@ SUBROUTINE nssl_2mom_driver(qv, qc, qr, qi, qs, qh, qhl, ccw, crw, cci, csw, chw
           ancuten(its:ite,1,kts:kte,:) = 0.0
           thproclocal(:,:) = 0.0
 
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(ix,jy,kz,xfall,axtra2d,an,t0,t1,t2,t3,t4,t5,t6,t7,t8,t9, &
+!$OMP t00,t77,dbz2d,vzf2d,dn1,pn,wn,dz2d,dz2dinv,ltemq,ssival,dp1,    &
+!$OMP elec2,thproclocal,t8s,t9s,il,n,ssat,loopcnt,   &
+!$OMP qvapor,ssifac,ancuten,rainprod2d,evapprod2d,kediagloc,alpha2d, &
+!$OMP hailmax1d,hailmaxk1)
 
      DO jy = jts,jye
      

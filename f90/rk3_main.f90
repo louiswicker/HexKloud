@@ -548,6 +548,12 @@
                        qx(k,i,j,n) = rqx(k,i,j,n)/rho(k,i,j)
                      enddo
 
+                     if ( nscalar > 1 ) then
+                     do n = 1,nscalar
+                       sx(k,i,j,n) = rsx(k,i,j,n)/rho(k,i,j)
+                     enddo
+                     endif
+
 !                      qv(k,i,j) = rqv(k,i,j)/rho(k,i,j)
 !                      qc(k,i,j) = rqc(k,i,j)/rho(k,i,j)
 !                      qr(k,i,j) = rqr(k,i,j)/rho(k,i,j)
@@ -656,6 +662,12 @@
                        qx(k,i,j,n) = rqx(k,i,j,n)/rho(k,i,j)
                      enddo
 
+                     if ( nscalar > 1 ) then
+                     do n = 1,nscalar
+                       sx(k,i,j,n) = rsx(k,i,j,n)/rho(k,i,j)
+                     enddo
+                     endif
+
 !                      qv (k,i,j) = rqv(k,i,j)/rho(k,i,j)
 !                      qc (k,i,j) = rqc(k,i,j)/rho(k,i,j)
 !                      qr (k,i,j) = rqr(k,i,j)/rho(k,i,j)
@@ -668,6 +680,12 @@
                      do n = 1,nmoist
                        rqx1(k,i,j,n) = rqx(k,i,j,n)
                      enddo
+
+                     if ( nscalar > 1 ) then
+                     do n = 1,nscalar
+                       rsx1(k,i,j,n) = rsx(k,i,j,n)
+                     enddo
+                     endif
 !                      rqv1(k,i,j) = rqv(k,i,j)
 !                      rqc1(k,i,j) = rqc(k,i,j)
 !                      rqr1(k,i,j) = rqr(k,i,j)
@@ -764,13 +782,25 @@
             end do
          end do
 
+      if ( debug ) then
+      if ( nscalar > 1 ) then
+        write(6,*) 'k,pres,w,qc,nc,qi,qh,t = '
+      else
+        write(6,*) 'k,pres,w,qc,qi,qh,t = '
+      endif
+      endif
       do j=1,ny
          do i=1,nx
             do k=1,nz1
               pres(k,i,j) = 1.e5*p(k,i,j)**(1./.2875)
               if ( debug .and. i == iwmax .and. j == jwmax ) then
-                write(6,*) 'k,pres,w,qc,qi,qh = ',k,pres(k,i,j),ws(k,i,j),qx(k,i,j,lc)*1000., &
-                  qx(k,i,j,li)*1000.,qx(k,i,j,lh)*1000. !rho(k,i,j),p(k,i,j)*t(k,i,j)
+               if ( nscalar > 1 ) then
+                write(6,*) k,pres(k,i,j),ws(k,i,j),qx(k,i,j,lc)*1000., sx(k,i,j,lnc), &
+                  qx(k,i,j,li)*1000.,qx(k,i,j,lh)*1000., pb(k,i,j)*t(k,i,j)-273.15
+               else
+                write(6,*) k,pres(k,i,j),ws(k,i,j),qx(k,i,j,lc)*1000., &
+                  qx(k,i,j,li)*1000.,qx(k,i,j,lh)*1000., pb(k,i,j)*t(k,i,j)-273.15
+               endif
               endif
             enddo
          enddo
@@ -863,6 +893,14 @@
                  rqx1(k,i,j,n) = rqx(k,i,j,n)
                  qx1 (k,i,j,n) = qx(k,i,j,n)
                enddo
+
+               if ( nscalar > 1 ) then
+               do n = 1,nscalar
+                 rsx (k,i,j,n) = sx(k,i,j,n)*rho(k,i,j)
+                 rsx1(k,i,j,n) = rsx(k,i,j,n)
+                 sx1 (k,i,j,n) = sx(k,i,j,n)
+               enddo
+               endif
 
 !                rqv (k,i,j) = qv(k,i,j)*rho(k,i,j)
 !                rqv1(k,i,j) = rqv(k,i,j)

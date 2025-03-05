@@ -283,6 +283,22 @@
      &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
+
+
+               do i=1,nxpl
+                  ii = i+ipi-1
+                  do k=1,nz1
+                     if(mod(ii,2).eq.0.)  then
+                        pltx(i,k) = 0.5*(dbz(k,ii,j)+dbz(k,ii,jp1))
+                     else
+                        pltx(i,k) = dbz(k,ii,j)
+                     end if
+                  end do
+               end do
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'dbz',plane,'p',  &
+     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
              endif
 
 !************  x-z perturbation qi cross section
@@ -478,6 +494,17 @@
                   end do
                end do
                call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qh',plane,'p',  &
+     &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+
+               do k=1,nz1
+                  do j=1,nypl
+                     jj = j+jpi-1
+                     plty(j,k)=dbz(k,i,jj)
+                  end do
+               end do
+               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'dbz',plane,'p',  &
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
@@ -741,6 +768,23 @@
                   end do
                end do
                call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'qh',plane,'h ',  &
+     &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
+               call frame
+
+               do j=1,nypl
+                  jj = j+jpi-1
+                  do i=1,nxpl
+                     ii = i+ipi-1
+                     if(mod(ii,2).eq.0.)  then
+                        jp1 =min(jj+1,ny)
+                        if(jper*jj.eq.ny)  jp1 = 2
+                        plt(i,j) = 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
+                     else
+                        plt(i,j) = dbz(k,ii,jj)
+                     end if
+                  end do
+               end do
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'dbz',plane,'h ',  &
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
                

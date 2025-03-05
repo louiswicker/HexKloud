@@ -6,8 +6,9 @@
 &main
   iadvord = 5,
   mp_physics = 18,
+  nssl_2moment_on = 1,
   dt = 6.0
   delt = 2.5
   iwty = 20 !
-  debug = .true.
+  debug = .false.
 /
