@@ -23,6 +23,12 @@
 !      xl    = 28000.
       xl    = 84000.
 !c      xl    = 56000.
+! orientation of hexes are flat on N/S, vertex on E/W 
+!    __    __    __
+!   /  \__/  \__/  \__
+!y  \__/  \__/  \__/  \
+!      \__/  \__/  \__/
+! x-> 
       side  = 2.*xl/(3.*float(nx1))
       d     = sqrt(3.)*side
       yl    = d*float(ny1)
@@ -43,14 +49,14 @@
 !      f     = .0001
       f     = 0.
 
-      hm     = 0.
+      hm     = 0. ! mountain height??
       ampl  = 1.
-      xa    = 10000.
-      ya    = 10000.
+      xa    = 10000. ! mountain x rad?
+      ya    = 10000. ! mountain y rad?
 
 ! time step
 !      dt    = 6.0
-      dt    = 12.0
+!      dt    = 12.0
 !      dt    = 24.0
       
 ! number of small steps
@@ -58,8 +64,8 @@
       ns0   = 8
 !      ns0   = 4
       
-! bubble temperature pert
-      delt= 3.
+! bubble temperature pert - default value set in rk3_main
+!      delt= 3. 
 !      delt= 2.
 
 
@@ -124,8 +130,8 @@
 
       xc     = .5*xl
       yc     = .5*yl
-      dx     = xl/float(nx1)
-      dy     = yl/float(ny1)
+      dx     = xl/float(nx1) ! = 1.5*side
+      dy     = yl/float(ny1) ! = sqrt(3)*side
       dz     = zt/float(nz1)
       nxc    = nx1/2+1
       if(mod(nxc,2).eq.0) nxc=nxc-1
@@ -183,6 +189,7 @@
       write(6,*) 'xa =',xa,' xl =',xl,' yl =',yl,' dt   =',dt
       write(6,*) 'zt =',zt,' zd =',zd,' xnut =',xnut
 !
+! xh and yh are the location (meters) of cell centers, starting with 0,0 for the lower left corner cell
       do j=1,ny
          do i=1,nx
             xh(i,j) = (i-1)*1.5*side
@@ -233,6 +240,7 @@
         qvzv(k) = 0.
       enddo
 !
+! smooth terrain coord? Klemp (2011)
       do j=1,ny
          do i=1,nx
             hs(i,j) = hm/(1.+((xh(i,j)-xc)/xa)**2+((yh(i,j)-yc)/ya)**2)

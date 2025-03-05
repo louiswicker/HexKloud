@@ -197,7 +197,7 @@
 !
 !     buoyancy term
 !
-  123 continue
+!  123 continue
   
       do j=1,ny
          do i=1,nx

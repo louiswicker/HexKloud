@@ -80,10 +80,10 @@
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
                         pltx(i,k) = .5*  &
-     &                      (t(k,ii,j  )/(1.+1.61*qx(k,ii,j  ,1))  &
-     &                      +t(k,ii,jp1)/(1.+1.61*qx(k,ii,jp1,1)))
+     &                      (t(k,ii,j  )/(1.+1.61*qx(k,ii,j  ,lv))  &
+     &                      +t(k,ii,jp1)/(1.+1.61*qx(k,ii,jp1,lv)))
                      else
-                        pltx(i,k) = t(k,ii,j)/(1.+1.61*qx(k,ii,j,1))
+                        pltx(i,k) = t(k,ii,j)/(1.+1.61*qx(k,ii,j,lv))
                      end if
                      pltx(i,k) = t0*(pltx(i,k)-tz(k)) 
                   end do
@@ -220,10 +220,10 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*(.5*(qx(k,ii,j,1)+qx(k,ii,jp1,1))  &
+                        pltx(i,k) = 1000.*(.5*(qx(k,ii,j,lv)+qx(k,ii,jp1,lv))  &
      &                                                   -qvzv(k))
                      else
-                        pltx(i,k) = 1000.*(qx(k,ii,j,1)-qvzv(k))  
+                        pltx(i,k) = 1000.*(qx(k,ii,j,lv)-qvzv(k))  
                      end if
                   end do
                end do
@@ -238,16 +238,16 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,2)+qx(k,ii,jp1,2))
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,lc)+qx(k,ii,jp1,lc))
                      else
-                        pltx(i,k) = 1000.*qx(k,ii,j,2)
+                        pltx(i,k) = 1000.*qx(k,ii,j,lc)
                      end if
                   end do
                end do
-!               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'qc',plane,'p',
-!     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
-!c               call curve(x,hxpl,nx)
-!               call frame
+              call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'qc',plane,'p',   &
+    &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+              call frame
 !
 !************  x-z perturbation qr cross section
 !                          
@@ -255,9 +255,9 @@
                   ii = i+ipi-1
                   do k=1,nz1
                      if(mod(ii,2).eq.0.)  then
-                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,3)+qx(k,ii,jp1,3))
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,lr)+qx(k,ii,jp1,lr))
                      else
-                        pltx(i,k) = 1000.*qx(k,ii,j,3)
+                        pltx(i,k) = 1000.*qx(k,ii,j,lr)
                      end if
                   end do
                end do
@@ -265,6 +265,44 @@
      &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
+
+!************  x-z perturbation qh cross section
+!                          
+             if ( nmoist >= lh ) then
+               do i=1,nxpl
+                  ii = i+ipi-1
+                  do k=1,nz1
+                     if(mod(ii,2).eq.0.)  then
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,lh)+qx(k,ii,jp1,lh))
+                     else
+                        pltx(i,k) = 1000.*qx(k,ii,j,lh)
+                     end if
+                  end do
+               end do
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'qh',plane,'p',  &
+     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+             endif
+
+!************  x-z perturbation qi cross section
+!                          
+             if ( nmoist >= li ) then
+               do i=1,nxpl
+                  ii = i+ipi-1
+                  do k=1,nz1
+                     if(mod(ii,2).eq.0.)  then
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,li)+qx(k,ii,jp1,li))
+                     else
+                        pltx(i,k) = 1000.*qx(k,ii,j,li)
+                     end if
+                  end do
+               end do
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'qi',plane,'p',  &
+     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+             endif
 
 !  122          continue
 !               go to 123
@@ -281,7 +319,7 @@
                do j=1,nypl
                   jj = j+jpi-1
                   do k=1,nz1
-                     plty(j,k) = t0*t(k,i,jj)/(1.+1.61*qx(k,i,jj,1))  &
+                     plty(j,k) = t0*t(k,i,jj)/(1.+1.61*qx(k,i,jj,lv))  &
      &                          -t0*tz(k)
                   end do
                end do
@@ -396,7 +434,7 @@
                do j=1,nypl
                   jj = j+jpi-1
                   do k=1,nz1
-                     plty(j,k)=1000.*(qx(k,i,jj,1)-qvzv(k))
+                     plty(j,k)=1000.*(qx(k,i,jj,lv)-qvzv(k))
                   end do
                end do
 !               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qv',plane,'p',
@@ -409,7 +447,7 @@
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
-                     plty(j,k)=1000.*qx(k,i,jj,2)
+                     plty(j,k)=1000.*qx(k,i,jj,lc)
                   end do
                end do
 !               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qc',plane,'p',
@@ -422,13 +460,29 @@
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
-                     plty(j,k)=1000.*qx(k,i,jj,3)
+                     plty(j,k)=1000.*qx(k,i,jj,lr)
                   end do
                end do
                call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qr',plane,'p',  &
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
+
+!************  y-z perturbation qh cross section
+!                          
+               IF ( nmoist >= lh ) THEN
+               do k=1,nz1
+                  do j=1,nypl
+                     jj = j+jpi-1
+                     plty(j,k)=1000.*qx(k,i,jj,lh)
+                  end do
+               end do
+               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qh',plane,'p',  &
+     &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+               
+               ENDIF
 !  123          continue
 !cc
 !               go to 124
@@ -466,12 +520,12 @@
                         jp1 =min(jj+1,ny)
                         if(jper*jj.eq.ny)  jp1 = 2
                         plt(i,j) = t0*.5*(t(k,ii,jj )  &
-     &                                  /(1.+1.61*qx(k,ii,jj ,1))  &
+     &                                  /(1.+1.61*qx(k,ii,jj ,lv))  &
      &                                      +t(k,ii,jp1)  &
-     &                                  /(1.+1.61*qx(k,ii,jp1,1)))  &
+     &                                  /(1.+1.61*qx(k,ii,jp1,lv)))  &
      &                            -t0*tz(k)
                      else
-                        plt(i,j) = t0*t(k,ii,jj)/(1.+1.61*qx(k,ii,jj,1))  &
+                        plt(i,j) = t0*t(k,ii,jj)/(1.+1.61*qx(k,ii,jj,lv))  &
      &                            -t0*tz(k)
                      end if
                   end do
@@ -623,7 +677,7 @@
 !                          
                do j=1,ny
                   do i=1,nx
-                     plt(i,j) = 1000.*(qx(k,i,j,1)-qvzv(k))
+                     plt(i,j) = 1000.*(qx(k,i,j,lv)-qvzv(k))
                   end do
                end do
 
@@ -635,7 +689,7 @@
 !                          
                do j=1,ny
                   do i=1,nx
-                     plt(i,j) = 1000.*qx(k,i,j,2)
+                     plt(i,j) = 1000.*qx(k,i,j,lc)
                   end do
                end do
 
@@ -662,15 +716,35 @@
                      if(mod(ii,2).eq.0.)  then
                         jp1 =min(jj+1,ny)
                         if(jper*jj.eq.ny)  jp1 = 2
-                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,3)+qx(k,ii,jp1,3))
+                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
                      else
-                        plt(i,j) = 1000.*qx(k,ii,jj,3)
+                        plt(i,j) = 1000.*qx(k,ii,jj,lr)
                      end if
                   end do
                end do
                call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'qr',plane,'h ',  &
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
+
+              IF ( nmoist >= lh ) THEN
+               do j=1,nypl
+                  jj = j+jpi-1
+                  do i=1,nxpl
+                     ii = i+ipi-1
+                     if(mod(ii,2).eq.0.)  then
+                        jp1 =min(jj+1,ny)
+                        if(jper*jj.eq.ny)  jp1 = 2
+                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,lh)+qx(k,ii,jp1,lh))
+                     else
+                        plt(i,j) = 1000.*qx(k,ii,jj,lh)
+                     end if
+                  end do
+               end do
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'qh',plane,'h ',  &
+     &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
+               call frame
+               
+               ENDIF
 
                end do
 
