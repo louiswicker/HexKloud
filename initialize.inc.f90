@@ -1,41 +1,46 @@
 !                                                                     72
-      pi    = 4.*atan(1.)
+     pi    = 4.*atan(1.)
 
-!     imass = 1
-      imass = 0
-!     iper  = 0
-      iper  = 1
-!     jper  = 0
-      jper  = 1
+!    imass = 1
+     imass = 0
+!    iper  = 0
+     iper  = 1
+!    jper  = 0
+     jper  = 1
 
-!     ur   = 0.
-!     ur   = -6.
-      ur   = -15.
-      angle= 0.
-!     angle= 45.
-      um    =ur*cos(angle/180.*pi)
-      vm    =ur*sin(angle/180.*pi)
-      u1m  = .5*sqrt(3.)*um-.5*vm
-      u3m  = .5*sqrt(3.)*um+.5*vm
-      u2m  = vm
-      write(6,*) 'U1M = ',u1m,'  U3M = ',u3m,' U2M = ',u2m
+!    ur   = 0.
+!    ur   = -6.
+     ur   = -15.
 
-!    xl    = 20000.
-!    xl    = 28000.
-     xl    = 84000.
-!    xl    = 56000.
+     angle= 0.
+!    angle= 45.
+     um  = ur*cos(angle/180.*pi)
+     vm  = ur*sin(angle/180.*pi)
+     u1m = .5*sqrt(3.)*um-.5*vm
+     u3m = .5*sqrt(3.)*um+.5*vm
+     u2m = vm
+
+     write(6,*) 'U1M = ',u1m,'  U3M = ',u3m,' U2M = ',u2m
+
+!    xl = 20000.
+!    xl = 28000.
+     xl = 84000.
+!    xl = 56000.
 
 ! orientation of hexes are flat on N/S, vertex on E/W 
 !    __    __    __
-!   /  \__/  \__/  \__
-!y  \__/  \__/  \__/  \
-!      \__/  \__/  \__/
-! x-> 
+! ^ /  \__/  \__/  \__
+! | \__/  \__/  \__/  \
+! y    \__/  \__/  \__/
+!
+! x--> 
+
      side  = 2.*xl/(3.*float(nx1))
      d     = sqrt(3.)*side
      yl    = d*float(ny1)
 
 ! initialization for 2-d y-z simulation
+
 !    yl    = 50000.
 !    d     = yl/float(ny1)
 !    side  = d/sqrt(3.)
@@ -51,7 +56,7 @@
 !    f     = .0001
      f     = 0.
 
-     hm     = 0. ! mountain height??
+     hm    = 0. ! mountain height
      ampl  = 1.
      xa    = 10000. ! mountain x rad?
      ya    = 10000. ! mountain y rad?
@@ -158,11 +163,11 @@
      xnus0   = 2./3.*xnus0      
 
 !*****adjustment to make mixing the same as xyz code
-!      deltax = sqrt(xl*yl/float(nx1*ny1))
-!     write(6,*) 'deltax = ',deltax,' dz = ',dz
-!     xnusz0 = xnus0*deltax**2/dz**2
-!     xnus0  = xnus0*2./3.*deltax**2/d**2
-      write(6,*) 'XNU = ',xnu/dt,' XNUS = ',xnus0,' XNUSZ = ',xnusz0
+!    deltax = sqrt(xl*yl/float(nx1*ny1))
+!    write(6,*) 'deltax = ',deltax,' dz = ',dz
+!    xnusz0 = xnus0*deltax**2/dz**2
+!    xnus0  = xnus0*2./3.*deltax**2/d**2
+     write(6,*) 'XNU = ',xnu/dt,' XNUS = ',xnus0,' XNUSZ = ',xnusz0
       
      iplt   = 1
      ipi    = nint(xpll/dx)+1
@@ -228,170 +233,175 @@
 !
 !  nondimensionalize the sounding
 !
-      do k=1,nz1
-        tz(k) = (tz(k))/t0
+     do k=1,nz1
+        tz(k)  = (tz(k))/t0
         tzv(k) = tz(k)
 !       rel_hum(k) = 0.
         qvzv(k) = 0.
-      enddo
+     enddo
  
 ! smooth terrain coord? Klemp (2011)
 
-      do j=1,ny
-         do i=1,nx
-            hs(i,j) = hm/(1.+((xh(i,j)-xc)/xa)**2+((yh(i,j)-yc)/ya)**2)
-            if(mod(i,2).eq.0)  then
-               hxpl(i) = ampl*.5*(hs(i,nyc)+hs(i,nyc+1))
-            ELSE
-               hxpl(i) = ampl*hs(i,nyc)
-            END IF
-            hh(i,j) = zt/(zt-hs(i,j))
-         end do
-      end do
+     do j=1,ny
+        do i=1,nx
+           hs(i,j) = hm/(1.+((xh(i,j)-xc)/xa)**2+((yh(i,j)-yc)/ya)**2)
+           if(mod(i,2).eq.0)  then
+              hxpl(i) = ampl*.5*(hs(i,nyc)+hs(i,nyc+1))
+           ELSE
+              hxpl(i) = ampl*hs(i,nyc)
+           END IF
+           hh(i,j) = zt/(zt-hs(i,j))
+        end do
+     end do
  
-      if(iper.eq.0)  then
-         do j=1,ny
-            jp1 = min(j+1,ny)
-            if(jper*j.eq.ny) jp1=2
-            jm1 = max(j-1,1)
-            if(jper*j.eq.1) jm1=ny1
-            do k=1,nz1
-               gu1(k,0,j) = (zu(k)-zt)/(zt-hs(1,jm1))  &
-     &                                *rd*(hs(2,jm1)-hs(1,jm1))
-               gu3(k,0,j) = (zu(k)-zt)/(zt-hs(1,j  ))  &
-     &                                *rd*(hs(2,jp1)-hs(1,jp1-1))
-               u1(k,0,j)  = u1m + u1z(k)
-               u3(k,0,j)  = u3m + u3z(k)
-            end do
-         end do
-      end if
-      if(jper.eq.0)  then
-         do i=1,nx
-            do k=1,nz1
-               gu2(k,i,0) = (zu(k)-zt)/(zt-hs(i,1))*rd*(hs(i,2)-hs(i,1))
-               u2(k,i,0)  = u2m + u2z(k)
-            end do
-         end do
-      end if
+     if(iper.eq.0)  then
+        do j=1,ny
+           jp1 = min(j+1,ny)
+           if(jper*j.eq.ny) jp1=2
+           jm1 = max(j-1,1)
+           if(jper*j.eq.1) jm1=ny1
+           do k=1,nz1
+              gu1(k,0,j) = (zu(k)-zt)/(zt-hs(1,jm1))  &
+     &                     *rd*(hs(2,jm1)-hs(1,jm1))
+              gu3(k,0,j) = (zu(k)-zt)/(zt-hs(1,j  ))  &
+     &                     *rd*(hs(2,jp1)-hs(1,jp1-1))
+              u1(k,0,j)  = u1m + u1z(k)
+              u3(k,0,j)  = u3m + u3z(k)
+           end do
+        end do
+     end if
+
+     if(jper.eq.0)  then
+        do i=1,nx
+           do k=1,nz1
+              gu2(k,i,0) = (zu(k)-zt)/(zt-hs(i,1))*rd*(hs(i,2)-hs(i,1))
+              u2(k,i,0)  = u2m + u2z(k)
+           end do
+        end do
+     end if
 
 !--------------------------------------------------------------
-      do ittrm = 1,10
+     do ittrm = 1,10
 !--------------------------------------------------------------
 
+     do j=1,ny
+        jp1 = min(j+1,ny)
+        if(jper*j.eq.ny) jp1=2
+        jm1 = max(j-1,1)
+        if(jper*j.eq.1  )  jm1=ny1
+        do i=1,nx
+           j1  = j
+           jn  = j
+           if(mod(i,2).eq.0)  then
+              jpj = j
+              jpm = jm1
+              if(jper.eq.0.and.j.eq.1 )  j1 = 2
+           else
+              jpj=jp1
+              jpm=j
+              if(jper.eq.0.and.j.eq.ny)  jn = ny1
+           end if
+           ip1 = min(i+1,nx)
+           if(iper*i.eq.nx) ip1=2
+           dhh1(i,j) = (hh(ip1,jpm)-hh(i,j1))/(hh(ip1,jpm)+hh(i,j1))
+           dhh3(i,j) = (hh(ip1,jpj)-hh(i,jn))/(hh(ip1,jpj)+hh(i,jn))
+           dhh2(i,j) = (hh(i  ,jp1)-hh(i,j ))/(hh(i  ,jp1)+hh(i,j ))
+           do k=1,nz1
+              ztemp      = zu(k)+(1.-zu(k)/zt)*hs(i,j)
+              gu1(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(ip1,jpm)+hs(i,j)))  &
+                           *rd*(hs(ip1,jpm)-hs(i,j1))
+              gu3(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(ip1,jpj)+hs(i,j)))  &
+                           *rd*(hs(ip1,jpj)-hs(i,jn))
+              gu2(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(i  ,jp1)+hs(i,j)))  &
+                           *rd*(hs(i  ,jp1)-hs(i,jp1-1))
+              u1(k,i,j)  = u1m + u1z(k)
+              u3(k,i,j)  = u3m + u3z(k)
+              u2(k,i,j)  = u2m + u2z(k)
 
-      do j=1,ny
-         jp1 = min(j+1,ny)
-         if(jper*j.eq.ny) jp1=2
-         jm1 = max(j-1,1)
-         if(jper*j.eq.1  )  jm1=ny1
-         do i=1,nx
-            j1  = j
-            jn  = j
-            if(mod(i,2).eq.0)  then
-               jpj = j
-               jpm = jm1
-           if(jper.eq.0.and.j.eq.1 )  j1 = 2
-            else
-               jpj=jp1
-               jpm=j
-           if(jper.eq.0.and.j.eq.ny)  jn = ny1
-            end if
-            ip1 = min(i+1,nx)
-            if(iper*i.eq.nx) ip1=2
-            dhh1(i,j) = (hh(ip1,jpm)-hh(i,j1))/(hh(ip1,jpm)+hh(i,j1))
-            dhh3(i,j) = (hh(ip1,jpj)-hh(i,jn))/(hh(ip1,jpj)+hh(i,jn))
-            dhh2(i,j) = (hh(i  ,jp1)-hh(i,j ))/(hh(i  ,jp1)+hh(i,j ))
-            do k=1,nz1
-               ztemp    = zu(k)+(1.-zu(k)/zt)*hs(i,j)
-               gu1(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(ip1,jpm)+hs(i,j)))  &
-     &                                    *rd*(hs(ip1,jpm)-hs(i,j1))
-               gu3(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(ip1,jpj)+hs(i,j)))  &
-     &                                    *rd*(hs(ip1,jpj)-hs(i,jn))
-               gu2(k,i,j) = (zu(k)-zt)/(zt-.5*(hs(i  ,jp1)+hs(i,j)))  &
-     &                                    *rd*(hs(i  ,jp1)-hs(i,jp1-1))
-               u1(k,i,j)  = u1m + u1z(k)
-               u3(k,i,j)  = u3m + u3z(k)
-               u2(k,i,j)  = u2m + u2z(k)
-!c               tb (k,i) = tzv(k)
-!               if(ztemp.le.zinv)  then
-!                  t(k,i,j)=1.+xn2l/g*ztemp
-!               else
-!                  t(k,i,j)=1.+xn2l/g*zinv+xn2/g*(ztemp-zinv)
-!               end if
-               t (k,i,j) = tz(k)
-               ti(k,i,j) = t(k,i,j)
-               tb(k,i,j) = t(k,i,j)
-            end do
+!             tb (k,i)   = tzv(k)
+!             if(ztemp.le.zinv)  then
+!                t(k,i,j)= 1.+xn2l/g*ztemp
+!             else
+!                t(k,i,j)= 1.+xn2l/g*zinv+xn2/g*(ztemp-zinv)
+!             end if
+
+              t (k,i,j)  = tz(k)
+              ti(k,i,j)  = t(k,i,j)
+              tb(k,i,j)  = t(k,i,j)
+           end do
          end do
       end do
 !
 !  assume zero moisture to start, itterate hydrostatic equation
 !
-!      do ittrm = 1,10
+!    do ittrm = 1,10
 !--------------------------------------------------------------
 
       fac1 = 0.61
       pitop = 1.-.5*dz*g/(cp*t (1,1,1)*(1.+fac1*qvzv(1))*t0*hh(1,1))
+
       do k=2,nz1
          tk = t(k,1,1)*(1.+fac1*qvzv(k))
          tkm1 = t(k-1,1,1)*(1.+fac1*qvzv(k-1))
          pitop = pitop-dz*g/(cp*.5*(tk+tkm1)*t0*hh(1,1))
       end do
+
       tk = t(nz1,1,1)*(1.+fac1*qvzv(nz1))
       pitop = pitop-.5*dz*g/(cp*t (nz1,1,1)*t0*hh(1,1))
+
       do j=1,ny
          do i=1,nx
             tk = tb(nz1,i,j)*(1.+fac1*qvzv(nz1))
             pb(nz1,i,j) = pitop+.5*dz*g/(cp*tk*t0*hh(i,j))
             tk = t(nz1,i,j)*(1.+fac1*qvzv(nz1))
             p (nz1,i,j) = pitop+.5*dz*g/(cp*tk*t0*hh(i,j))
+
             do k=nz2,1,-1
-               tk = tb(k,i,j)*(1.+fac1*qvzv(k))
-               tkp1 = tb(k+1,i,j)*(1.+fac1*qvzv(k+1))
-               pb(k,i,j)  = pb(k+1,i,j)  &
-     &                      + dz*g/(cp*.5*(tk+tkp1)*t0*hh(i,j)) 
-               tk = t(k,i,j)*(1.+fac1*qvzv(k))
-               tkp1 = t(k+1,i,j)*(1.+fac1*qvzv(k+1))
-               p (k,i,j)  = p (k+1,i,j)  &
-     &                      + dz*g/(cp*.5*(tk+tkp1)*t0*hh(i,j))
+               tk         = tb(k,i,j)*(1.+fac1*qvzv(k))
+               tkp1       = tb(k+1,i,j)*(1.+fac1*qvzv(k+1))
+               pb(k,i,j)  = pb(k+1,i,j) + dz*g/(cp*.5*(tk+tkp1)*t0*hh(i,j)) 
+               tk         = t(k,i,j)*(1.+fac1*qvzv(k))
+               tkp1       = t(k+1,i,j)*(1.+fac1*qvzv(k+1))
+               p (k,i,j)  = p (k+1,i,j)  + dz*g/(cp*.5*(tk+tkp1)*t0*hh(i,j))
             end do
+
             do k=1,nz1
                rb(k,i,j)  = (100000./287./300.)*pb(k,i,j)**(1./rcv)/  &
-     &                      ((tb(k,i,j)*(1.+1.61*qvzv(k)))*hh(i,j))
+                            ((tb(k,i,j)*(1.+1.61*qvzv(k)))*hh(i,j))
                rr(k,i,j)  = (100000./287./300.)*p (k,i,j)**(1./rcv)/  &
-     &                      ((t (k,i,j)*(1.+1.61*qvzv(k)))*hh(i,j))  &
-     &                      -rb(k,i,j)
+                            ((t (k,i,j)*(1.+1.61*qvzv(k)))*hh(i,j)) - rb(k,i,j)
                rtb(k,i,j) = rb(k,i,j)*tb(k,i,j)*(1.+1.61*qvzv(k))
-               rti(k,i,j) = t(k,i,j)*rr(k,i,j)+rb(k,i,j)*  &
-     &                      (t(k,i,j)-tb(k,i,j))*(1.+1.61*qvzv(k))
+               rti(k,i,j) = t(k,i,j)*rr(k,i,j)+rb(k,i,j)*             &
+                            (t(k,i,j)-tb(k,i,j))*(1.+1.61*qvzv(k))
            end do
          end do
       end do
 !
       rttop = 0.
+
       do itr=1,10
          tmax=0.
          do j=1,ny
             do i=1,nx
-               rt(nz1,i,j) = rttop-.5*dz*g/(c2*p(nz1,i,j)*hh(i,j))*  &
-     &                 (rb(nz1,i,j)*(p(nz1,i,j)-pb(nz1,i,j))/pb(nz1,i,j)  &
-     &                 -rr(nz1,i,j))
+               rt(nz1,i,j) = rttop-.5*dz*g/(c2*p(nz1,i,j)*hh(i,j))*             &
+                             (rb(nz1,i,j)*(p(nz1,i,j)-pb(nz1,i,j))/pb(nz1,i,j)  &
+                           - rr(nz1,i,j))
+
                do k=nz2,1,-1
-                  rt(k,i,j) = rt(k+1,i,j)-dz*g/(c2*(p(k,i,j)+p(k+1,i,j))         &
-     &                        *hh(i,j))*  &
-     &                          (rb(k  ,i,j)*(p(k  ,i,j)-pb(k  ,i,j))  &
-     &                          /pb(k  ,i,j)-rr(k  ,i,j)  &
-     &                          +rb(k+1,i,j)*(p(k+1,i,j)-pb(k+1,i,j))  &
-     &                          /pb(k+1,i,j)-rr(k+1,i,j))
+                  rt(k,i,j) = rt(k+1,i,j)-dz*g/(c2*(p(k,i,j)+p(k+1,i,j))        &
+                            * hh(i,j)) * (rb(k  ,i,j)*(p(k  ,i,j)-pb(k  ,i,j))  &
+                                         /pb(k  ,i,j)-rr(k  ,i,j)               &
+                                         +rb(k+1,i,j)*(p(k+1,i,j)-pb(k+1,i,j))  &
+                                         /pb(k+1,i,j)-rr(k+1,i,j))
                end do
+
                do k=1,nz1
                   tdiff=abs(rt(k,i,j)-rti(k,i,j))
                   if(tdiff.gt.tmax)  tmax = tdiff
-                  p  (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j))  &
-     &                                 /(100000./287./300.))**rcv
-                  rr (k,i,j) = rt(k,i,j)-rb(k,i,j)*  &
-     &                         (t(k,i,j)-tb(k,i,j))*(1.+1.61*qvzv(k))  &
-     &                        /(t(k,i,j)*(1.+1.61*qvzv(k)))
+                  p  (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j)) / (100000./287./300.))**rcv
+                  rr (k,i,j) = rt(k,i,j)-rb(k,i,j) *                   &
+                               (t(k,i,j)-tb(k,i,j))*(1.+1.61*qvzv(k))  &
+                              /(t(k,i,j)*(1.+1.61*qvzv(k)))
                   rri(k,i,j) = rr(k,i,j)
                   rti(k,i,j) = rt(k,i,j)
                   pii(k,i,j) = p (k,i,j)
@@ -406,8 +416,9 @@
       rady  = 10000.
       radz  = 1500.
       zcent = 1500.
-!c      radz = 2000.
-!c      zcent = 3000.
+!     radz = 2000.
+!     zcent = 3000.
+
       if(delt.ne.0.)  then
          do j=1,ny
             do i=1,nx
@@ -419,29 +430,31 @@
             end if
                do k=1,nz1
                   ztemp      = zu(k)+(1.-zu(k)/zt)*hs(i,j)
-!                  rad=sqrt(((xh(i,j)-xc)/radx)**2
-!     &                    +((ztemp-zcent)/radz)**2)
-!                  rad=sqrt(((yh(i,j)-yc)/rady)**2
-!     &                    +((ztemp-zcent)/radz)**2)
-!                  rad=sqrt(((xh(i,j)-xc)/radx)**2+((yh(i,j)-yc)/rady)**2
-!     &                    +((ztemp-zcent)/radz)**2)
-                  rad=sqrt(((xht-xc)/radx)**2+((yht-yc)/rady)**2  &
-     &                    +((ztemp-zcent)/radz)**2)
+
+!                 rad=sqrt(((xh(i,j)-xc)/radx)**2 + ((ztemp-zcent)/radz)**2)
+!                 rad=sqrt(((yh(i,j)-yc)/rady)**2 + ((ztemp-zcent)/radz)**2)
+!                 rad=sqrt(((xh(i,j)-xc)/radx)**2+((yh(i,j)-yc)/rady)**2 + ((ztemp-zcent)/radz)**2)
+
+                  rad=sqrt(((xht-xc)/radx)**2+((yht-yc)/rady)**2 + ((ztemp-zcent)/radz)**2)
+
                   if(rad.lt.1)  then
                      t(k,i,j)=t(k,i,j)+delt*cos(.5*pi*rad)**2
-! equiv line
-! from joe's code
-!                  TTEMP = .5*DELT*(COS(PI*RAD)+1.)+TTEMP
-!
                   end if
+
+! different bubble formulation from joe's code
+!
+!                 if(rad.lt.1)  then
+!                    t(k,i,j)=t(k,i,j)+0.5*delt*(cos(pi*rad)+1.0)
+!                 end if
+!
                   rt1(k,i,j)=rt(k,i,j)
                end do
             end do
          end do
 
-!         do j=1,ny
+!        do j=1,ny
 !            do i=1,nx
-!c             ii=i+nxc-1
+!              ii=i+nxc-1
 !c             if(i.gt.nxc)  ii=nx+1-i
 !              ii =i
 !              jj=j+nyc-1
@@ -456,24 +469,22 @@
             tmax=0.
             do j=1,ny
                do i=1,nx
-                  rt(nz1,i,j) = rttop-.5*dz*g/(c2*p(nz1,i,j)*hh(i,j))*  &
-     &                         (rb(nz1,i,j)*(p(nz1,i,j)-pb(nz1,i,j))/  &
-     &                          pb(nz1,i,j)-rr(nz1,i,j))
+                  rt(nz1,i,j) = rttop-.5*dz*g/(c2*p(nz1,i,j) * hh(i,j)) *   &
+                               (rb(nz1,i,j)*(p(nz1,i,j)-pb(nz1,i,j))/       &
+                                pb(nz1,i,j)-rr(nz1,i,j))
                   do k=nz2,1,-1
-                     rt(k,i,j) = rt(k+1,i,j)-.5*dz*g/(c2*p(k,i,j)  &
-     &                           *hh(i,j))*  &
-     &                             (rb(k  ,i,j)*(p(k  ,i,j)-pb(k  ,i,j))  &
-     &                             /pb(k  ,i,j)-rr(k  ,i,j)  &
-     &                             +rb(k+1,i,j)*(p(k+1,i,j)-pb(k+1,i,j))  &
-     &                             /pb(k+1,i,j)-rr(k+1,i,j))
+                     rt(k,i,j) = rt(k+1,i,j)-.5*dz*g/(c2*p(k,i,j) * hh(i,j)) *  &
+                                         (rb(k  ,i,j)*(p(k  ,i,j)-pb(k  ,i,j))  &
+                                         /pb(k  ,i,j)-rr(k  ,i,j)  &
+                                         +rb(k+1,i,j)*(p(k+1,i,j)-pb(k+1,i,j))  &
+                                         /pb(k+1,i,j)-rr(k+1,i,j))
                   end do
+
                   do k=1,nz1
                      tdiff=abs(rt(k,i,j)-rt1(k,i,j))
                      if(tdiff.gt.tmax)  tmax=tdiff
-                     p  (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j))  &
-     &                            /(100000./287./300.))**rcv
-                     rr (k,i,j) = (rt(k,i,j)-rb(k,i,j)  &
-     &                            *(t(k,i,j)-tb(k,i,j)))/t(k,i,j)
+                     p  (k,i,j) = (hh(i,j)*(rtb(k,i,j)+rt(k,i,j)) / (100000./287./300.))**rcv
+                     rr (k,i,j) = (rt(k,i,j)-rb(k,i,j) * (t(k,i,j)-tb(k,i,j)))/t(k,i,j)
                      rt1(k,i,j) =  rt(k,i,j)
                   end do
                end do
@@ -665,8 +676,8 @@
             gamma(1,i,j) = 0.
          end do
       end do
-      if(iplt.eq.1)   then
-        IF ( .true. ) THEN
+
+      IF(iplt .eq. 1) THEN
 !
 ! Open GKS.
 !
@@ -674,13 +685,8 @@
         CALL GOPWK (IWID,LUNI,IWTY)
         CALL GACWK (IWID)
 
-         ELSE
+      END IF
 
-         call opngks
-
-         ENDIF
-         call frame
-      end if
       kkk  = 0
       nit  = 0
       npr  = 0
@@ -696,13 +702,13 @@
      &     k,zu(k),thetak,t0*(rt(k,ipp,jpp)+rtb(k,ipp,jpp)), &
      &     pb(k,ipp,jpp),rb(k,ipp,jpp),qvzv(k)
       enddo
-!c      stop
- 666  format(1x,i3,1x,f6.0,5(1x,e13.6))
+!      stop
+666  format(1x,i3,1x,f6.0,5(1x,e13.6))
 
-         do j=1,ny
-            do i=1,nx
-               do k=1,nz1
-                  t_d_tend(k,i,j) = 0.
-               end do
+      do j=1,ny
+         do i=1,nx
+            do k=1,nz1
+               t_d_tend(k,i,j) = 0.
             end do
          end do
+      end do
