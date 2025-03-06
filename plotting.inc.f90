@@ -18,6 +18,7 @@
          end do
          
          if((kkk.ge.ip).or. (nit.eq.0)) then      
+
             print 901 ,time
   901       format(1h ,'time =',f10.1)
             kkk=0
@@ -622,9 +623,9 @@
                   end do
                end do
 
-!              call trplot(plt,nx,ny,0.,0.,0.,'u2',plane,'u2',time,
-!     &                     pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
-!               call frame
+               call trplot(plt,nx,ny,0.,0.,0.,'u2',plane,'u2',time, &
+                            pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
+                call frame
 !
 !************  x-y perturbation w cross section
 !                          
@@ -795,14 +796,12 @@
 !  124          continue
 
         end if
-       end if
 
 !===============================================================================
 ! netcdf writeout
 
-     allocate(ncdf_var(nxpl,nypl,nz1,1) )
+     allocate(ncdf_var(nxpl,nypl,nz1,10) )
  
-
      ncdf_file = 'hexcloud.XXXX.nc'
      write(ncdf_file(10:13),100) int(time)
 100 format(i4.4)
@@ -810,9 +809,60 @@
      write(6,*) 'Now writing ', ncdf_file
      write(6,*) ''
 
-     varlabel(1) = 'W '
+     varlabel(1)  = 'U  '
+     varlabel(2)  = 'V  '
+     varlabel(3)  = 'W  '
+     varlabel(4)  = 'THP'
 
-     do k = 1,nz1
+     varlabel(5)  = 'QvP'
+     varlabel(6)  = 'Qc '
+     varlabel(7)  = 'Qr'
+
+     varlabel(8)  = 'Qi '
+     varlabel(9)  = 'Qh'
+     varlabel(10) = 'REF'
+
+     DO k = 1,nz1
+
+        do j=1,nypl
+           jj = j+jpi-1
+           do i=1,nxpl
+              ii = i+ipi-1
+              if(mod(ii,2).eq.0.) then
+                 jp1 =min(jj+1,ny)
+                 if(jper*jj.eq.ny)  jp1 = 2
+
+                 ncdf_var(i,j,k,3) = .25*(w(k,ii,jj )+w(k+1,ii,jj )  &
+                                         +w(k,ii,jp1)+w(k+1,ii,jp1))
+              else
+                 ncdf_var(i,j,k,3) = .5*(w(k,ii,jj)+w(k+1,ii,jj))
+              end if
+           end do
+        end do
+
+        do j=1,nypl
+           jp1 = min(j+1,ny)
+           if(jper*j.eq.ny )  jp1 = 2
+           jm1 = max(j-1,1)
+           if(jper*j.eq.1  )  jm1 = ny1
+           do i=1,nxpl
+              if(mod(i,2).eq.0)  then
+                 jpj = j
+                 jpm = jm1
+              else
+                 jpj = jp1
+                 jpm = j
+              end if
+              im1=i-1
+              if(iper*i.eq.1) im1 = nx1
+              ncdf_var(i,j,k,1) = ampl*.5/sqrt(3.)  &
+                                       *(u1(k,i,j)+u1(k,im1,jpj)  &
+                                        +u3(k,i,j)+u3(k,im1,jpm)  &
+                                    -2.*(u1z(k)+u1m+u3z(k)+u3m))
+              ncdf_var(i,j,k,2) = u2(k,i,j)
+           end do
+        end do
+
         do j=1,nypl
            jj = j+jpi-1
            do i=1,nxpl
@@ -820,20 +870,45 @@
               if(mod(ii,2).eq.0.)  then
                  jp1 =min(jj+1,ny)
                  if(jper*jj.eq.ny)  jp1 = 2
-
-                 ncdf_var(i,j,k,1) = .25*(w(k,ii,jj )+w(k+1,ii,jj )  &
-                                       +w(k,ii,jp1)+w(k+1,ii,jp1))
+                 ncdf_var(i,j,k,4) = t0*.5*(t(k,ii,jj ) / (1.+1.61*qx(k,ii,jj ,lv))  &
+                                           +t(k,ii,jp1) / (1.+1.61*qx(k,ii,jp1,lv))) - t0*tz(k)
               else
-                 ncdf_var(i,j,k,1) = .5*(w(k,ii,jj)+w(k+1,ii,jj))
+                 ncdf_var(i,j,k,4) = t0*t(k,ii,jj)/(1.+1.61*qx(k,ii,jj,lv)) - t0*tz(k)
               end if
-           end do
-        end do
-     end do
+            end do
+         end do
 
-     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz, 1, x, y, zu, ncdf_var, varlabel)
+         do j=1,nypl
+           jj = j+jpi-1
+           do i=1,nxpl
+              ii = i+ipi-1
+              if(mod(ii,2).eq.0.)  then
+                 jp1 =min(jj+1,ny)
+                 if(jper*jj.eq.ny)  jp1 = 2
+                 ncdf_var(i,j,k,5) = 0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
+                 ncdf_var(i,j,k,6) = 1000.0*0.5*(qx(k,ii,jj,lc)+qx(k,ii,jp1,lc))
+                 ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
+                 ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
+                 ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,lh))
+                 ncdf_var(i,j,k,10)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
+              else
+                 ncdf_var(i,j,k,5) = 1000.0 * (qx(k,ii,jj,lv) - qvzv(k))
+                 ncdf_var(i,j,k,6) = 1000.0 * qx(k,ii,jj,lc)
+                 ncdf_var(i,j,k,7) = 1000.0 * qx(k,ii,jj,lr)
+                 ncdf_var(i,j,k,8) = 1000.0 * qx(k,ii,jj,li)
+                 ncdf_var(i,j,k,9) = 1000.0 * qx(k,ii,jj,lh)
+                 ncdf_var(i,j,k,10)= dbz(k,ii,jj)
+              end if
+            end do
+         end do
+
+     END DO
+
+     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz, 10, x, y, zu, ncdf_var, varlabel)
 
      write(6,*) 'Finished writing ', ncdf_file
      write(6,*) ''
 
      deallocate(ncdf_var)
 
+     end if

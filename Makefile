@@ -28,6 +28,3 @@ rk3_plot.o: rk3_plot.f90
 
 clean:
 	rm -f *.o *.mod rk3_moist
-
-rk3_main.o: plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
-

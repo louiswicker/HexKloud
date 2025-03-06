@@ -140,8 +140,8 @@
 
 ! Arrays for netCDF
 
-      character(len=2),  dimension(20) :: varlabel
-      character(len=16)                :: ncdf_file
+      character(len=3),  dimension(20) :: varlabel
+      character(len=20)                :: ncdf_file
 
       real, allocatable :: ncdf_var(:,:,:,:)
 
