@@ -1,3 +1,4 @@
+!===============================================================================
 !********** nonlinear nonhydrostatic time-split model on hexagonal grid
 !********** mass conserving, flux-form variables
 !********** open or periodic boundaries.
@@ -5,24 +6,28 @@
 !********** includes atmospheric mean state. constant stability
 !********** reference code for terrain-folling height coordinate model
 !
-!  this code incorporates the wicker and skamarock RK2 timesplitting
+!  This code incorporates the wicker and skamarock RK3 timesplitting
 !  algorithm
-!                                                                     72
-!  this code also includes kessler microphysics
-!
-      program hexgrid
+!                                                                     
+!  This code also includes kessler microphysics
+!  This code also includes NSSL-2M scheme microphysics (Ted Mansell)
+!===============================================================================
+
+      PROGRAM HEXKLOUD   ! In honor of Joe Klemp
 
       USE module_mp_nssl_2mom
 
       implicit none
-!      parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+
       integer, parameter :: nz= 41, nx= 91, ny= 79, nz1=nz-1, nx1=nx-1, ny1=ny-1
-!      parameter (nz= 41, nx= 47, ny= 40, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 121, ny=105, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 181, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+
+!     parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 47, ny= 40, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 121, ny=105, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 181, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 
       real u1  (nz1,0:nx,ny), u11 (nz1,0:nx,ny), ru1 (nz1,0:nx,ny)  &
      &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
@@ -52,7 +57,6 @@
      &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
      &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
      &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
-
 
       real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
      &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
@@ -119,25 +123,36 @@
       integer :: IDS=1,IDE=nx, JDS=1,JDE=ny, KDS=1,KDE=nz1, &
                  IMS=1,IME=nx, JMS=1,JME=ny, KMS=1,KME=nz1, &
                  ITS=1,ITE=nx, JTS=1,JTE=ny, KTS=1,KTE=nz1
+
       real    :: nssl_cccn = 6.e8, nssl_alphah=0, nssl_alphahl=1,  &
-    &            nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
-    &            nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
+                 nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
+                 nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
 
       integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
       integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
       integer           :: iadvord = 5 ! advection order
       character(len=6)  :: order
 
-      real              :: delt = 3. ! bubble temp
-      real              :: dt = 6.0 ! time step
+      real              :: delt  = 3.     ! bubble temp
+      real              :: dt    = 6.0    ! time step
       logical           :: debug = .false.
 
+! Arrays for netCDF
+
+      character(len=2),  dimension(20) :: varlabel
+      character(len=16)                :: ncdf_file
+
+      real, allocatable :: ncdf_var(:,:,:,:)
+
 ! Namelist declarations
+
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
       integer           :: iunit
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, dt, iwty, debug
+
+! Start here and read namelist
 
       INQUIRE(file=trim(filename), exist=if_exist)
 
@@ -169,8 +184,6 @@
          
         allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
         allocate( rainnc(nx,ny), rainncv(nx,ny) )
-
-        dz3d(:,:,:) = dz
 
 ! call init?
        nssl_params(:)  = 0
@@ -242,6 +255,8 @@
       include "initialize.inc.f90"
 !
 !--------------
+
+      dz3d(:,:,:) = dz
 
       Azero(1) = 0.0
 

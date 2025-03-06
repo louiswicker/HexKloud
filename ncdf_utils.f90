@@ -34,6 +34,8 @@
     integer :: VarID(nv)
     
     real, dimension(nx,ny,nz) :: tmp
+
+    write(6,*) 'SUBROUTINE WRITE_NC4_FILE: ', filename
     
 !----------------- Create and open netCDF -----------------
 

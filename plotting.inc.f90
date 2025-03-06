@@ -795,5 +795,45 @@
 !  124          continue
 
         end if
-         end if
+       end if
+
+!===============================================================================
+! netcdf writeout
+
+     allocate(ncdf_var(nxpl,nypl,nz1,1) )
+ 
+
+     ncdf_file = 'hexcloud.XXXX.nc'
+     write(ncdf_file(10:13),100) int(time)
+100 format(i4.4)
+
+     write(6,*) 'Now writing ', ncdf_file
+     write(6,*) ''
+
+     varlabel(1) = 'W '
+
+     do k = 1,nz1
+        do j=1,nypl
+           jj = j+jpi-1
+           do i=1,nxpl
+              ii = i+ipi-1
+              if(mod(ii,2).eq.0.)  then
+                 jp1 =min(jj+1,ny)
+                 if(jper*jj.eq.ny)  jp1 = 2
+
+                 ncdf_var(i,j,k,1) = .25*(w(k,ii,jj )+w(k+1,ii,jj )  &
+                                       +w(k,ii,jp1)+w(k+1,ii,jp1))
+              else
+                 ncdf_var(i,j,k,1) = .5*(w(k,ii,jj)+w(k+1,ii,jj))
+              end if
+           end do
+        end do
+     end do
+
+     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz, 1, x, y, zu, ncdf_var, varlabel)
+
+     write(6,*) 'Finished writing ', ncdf_file
+     write(6,*) ''
+
+     deallocate(ncdf_var)
 
