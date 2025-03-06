@@ -53,31 +53,24 @@
      &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
      &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
 
-!      real :: rhom  (nz1,nx,ny), rrt (nz1,nx  ,ny) &
-!              ,rtt (nz1,nx  ,ny), ru1t(nz1,0:nx,ny) &
-!              ,ru2t(nz1,nx,0:ny), ru3t(nz1,0:nx,ny) &
-!              , rwt (nz1,nx  ,ny)
 
       real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
      &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
      &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)  &
      &    ,t_d_tend (nz1,nx  ,ny)
 
-!       real rqv (nz1,nx,ny), rqc(nz1,nx,ny) , rqr (nz1,nx,ny)  &
-!      &    ,rqv1(nz1,nx,ny), rqc1(nz1,nx,ny), rqr1(nz1,nx,ny)  &
-!      &    ,qv1 (nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny)  &
-!      &    ,qv  (nz1,nx,ny), qc  (nz1,nx,ny), qr  (nz1,nx,ny)  &
-!      &    ,fqv (nz1,nx,ny), fqc (nz1,nx,ny), fqr (nz1,nx,ny)
-      
-      ! rqx,rqx1 are mass content (qx*rho)
-      ! qx, qx1 are mass mixing ratio
-      ! fqx are tendencies?
+! rqx,rqx1 are mass content (qx*rho)
+! qx, qx1 are mass mixing ratio
+! fqx are tendencies?
+! Now 4D to accomadate NSSL-2M scheme
+
       real, allocatable :: rqx(:,:,:,:),rqx1(:,:,:,:), qx(:,:,:,:), qx1(:,:,:,:), fqx(:,:,:,:)
       real, allocatable :: rsx(:,:,:,:),rsx1(:,:,:,:), sx(:,:,:,:), sx1(:,:,:,:), fsx(:,:,:,:)
       real, allocatable :: dz3d(:,:,:), dbz(:,:,:),ws(:,:,:), pres(:,:,:)
       real, allocatable :: rainnc(:,:), rainncv(:,:)
 
-      integer :: nmoist,nscalar
+      integer :: nmoist, nscalar
+
       real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
      &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
      &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
@@ -87,18 +80,12 @@
 
       real*4 Azero(1)
 
-!      common /grid/ xh(nx,ny), xu1(nx,ny), xu2(nx,ny), xu3(nx,ny),
-!     &              yh(nx,ny), yu1(nx,ny), yu2(nx,ny), yu3(nx,ny)
-
       common /grid/ xh, xu1, xu2, xu3, yh, yu1, yu2, yu3
 
       integer imass, rk_step, ns_rk, total_steps
       character*3 slice(2)
       character*6 plane
       equivalence (plane,slice)
-      logical second
-      parameter(second = .true.)
-!     parameter(second = .false.)
 
       integer, PARAMETER :: IERF=6,LUNI=2,IWID=1  
       integer :: IWTY = 20 !  1=ncgm/gmeta; 20=PostScript
@@ -122,15 +109,12 @@
       real :: xht, xl, xn, xn2, xn2l, xn2m, xnu, xnus, xnus0, xnusz, xnusz0, xnut
       real :: ya, yc, yl, yht
       real :: zcent, zd, zinv, zt, ztemp
-      character(LEN=50) :: filename = 'namelist.input'
-      logical if_exist
-      integer :: iunit
       integer, parameter :: lv = 1, lc = 2, lr = 3
       integer :: li = 4, ls = 5, lh = 6, lhl = 7
       integer :: lnc = 1, lnr = 2, lni = 3, lns = 4, lnh = 5, lnhl = 6, lccn = 7
       integer :: lvh = 8, lvhl = 9
       real    :: tmp
-      REAL, DIMENSION(20) :: nssl_params
+      real, dimension(20) :: nssl_params
 
       integer :: IDS=1,IDE=nx, JDS=1,JDE=ny, KDS=1,KDE=nz1, &
                  IMS=1,IME=nx, JMS=1,JME=ny, KMS=1,KME=nz1, &
@@ -139,13 +123,19 @@
     &            nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
     &            nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
 
-      integer :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
-      integer :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
-      integer :: iadvord = 5 ! advection order
-      real    :: delt = 3. ! bubble temp
-      real    :: dt = 6.0 ! time step
-      character(len=6) :: order
-      logical :: debug = .false.
+      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
+      integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
+      integer           :: iadvord = 5 ! advection order
+      character(len=6)  :: order
+
+      real              :: delt = 3. ! bubble temp
+      real              :: dt = 6.0 ! time step
+      logical           :: debug = .false.
+
+! Namelist declarations
+      character(LEN=50) :: filename = 'namelist.input'
+      logical           :: if_exist
+      integer           :: iunit
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, dt, iwty, debug
 
@@ -178,9 +168,11 @@
          endif
          
         allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
-        dz3d(:,:,:) = dz
         allocate( rainnc(nx,ny), rainncv(nx,ny) )
-       ! call init?
+
+        dz3d(:,:,:) = dz
+
+! call init?
        nssl_params(:)  = 0
        nssl_params(1)  = nssl_cccn
        nssl_params(2)  = nssl_alphah
@@ -197,15 +189,16 @@
        nssl_params(13) = 0 ! reserved
        nssl_params(14) = 0 ! reserved
        nssl_params(15) = 0 ! reserved
-         CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0, &
-           nssl_density_on=.true.,                             &
-           nssl_hail_on=.true.,                                &
-           nssl_ccn_on= ( i >= 5 ),                            &
-           nssl_icdx=6,                                        &
-           nssl_icdxhl=6,                                      &
-           ccn_is_ccna=nssl_ccn_is_ccna)
+       CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0,        &
+                           nssl_density_on=.true.,                             &
+                           nssl_hail_on=.true.,                                &
+                           nssl_ccn_on= ( i >= 5 ),                            &
+                           nssl_icdx=6,                                        &
+                           nssl_icdxhl=6,                                      &
+                           ccn_is_ccna=nssl_ccn_is_ccna)
       else
         write(0,*) 'unsupported value of mp_physics: ', mp_physics
+        stop
       endif
       
       if ( iadvord == 2 ) then
@@ -935,7 +928,7 @@
 !            do k=1,nz1
 !              if(mod(i,2).eq.0.)  then
 !                 nyj=ny+1-j
-!c                nyj=nyc+1-j
+!                 nyj=nyc+1-j
 !                 if(nyj.lt.1)  nyj=nyj+ny1
 !                  vdiff=abs(u2(k,i,j)+u2(k,i,nyj))
 !              else
@@ -952,7 +945,7 @@
 !              end if
 !            end do
 !         end do
-!c         write(6,*) j,yu2(91,j),u2(1,91,j),yu2(92,j),u2(1,92,j)
+!         write(6,*) j,yu2(91,j),u2(1,91,j),yu2(92,j),u2(1,92,j)
 !      end do
 !     write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
 

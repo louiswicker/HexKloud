@@ -1,17 +1,18 @@
 !                                                                     72
       pi    = 4.*atan(1.)
-!c      imass = 1
+
+!     imass = 1
       imass = 0
-!      iper  = 0
+!     iper  = 0
       iper  = 1
-!      jper  = 0
+!     jper  = 0
       jper  = 1
 
-!      ur   = 0.
-!c      ur   = -6.
+!     ur   = 0.
+!     ur   = -6.
       ur   = -15.
       angle= 0.
-!      angle= 45.
+!     angle= 45.
       um    =ur*cos(angle/180.*pi)
       vm    =ur*sin(angle/180.*pi)
       u1m  = .5*sqrt(3.)*um-.5*vm
@@ -19,152 +20,142 @@
       u2m  = vm
       write(6,*) 'U1M = ',u1m,'  U3M = ',u3m,' U2M = ',u2m
 
-!      xl    = 20000.
-!      xl    = 28000.
-      xl    = 84000.
-!c      xl    = 56000.
+!    xl    = 20000.
+!    xl    = 28000.
+     xl    = 84000.
+!    xl    = 56000.
+
 ! orientation of hexes are flat on N/S, vertex on E/W 
 !    __    __    __
 !   /  \__/  \__/  \__
 !y  \__/  \__/  \__/  \
 !      \__/  \__/  \__/
 ! x-> 
-      side  = 2.*xl/(3.*float(nx1))
-      d     = sqrt(3.)*side
-      yl    = d*float(ny1)
+     side  = 2.*xl/(3.*float(nx1))
+     d     = sqrt(3.)*side
+     yl    = d*float(ny1)
 
-!     initialization for 2-d y-z simulation
-!      yl    = 50000.
-!      d     = yl/float(ny1)
-!      side  = d/sqrt(3.)
-!      xl    = 1.5*side*float(nx1)
+! initialization for 2-d y-z simulation
+!    yl    = 50000.
+!    d     = yl/float(ny1)
+!    side  = d/sqrt(3.)
+!    xl    = 1.5*side*float(nx1)
 
-      write(6,*) 'XL = ',xl,'   YL = ',yl,'   D = ',d
+     write(6,*) 'XL = ',xl,'   YL = ',yl,'   D = ',d
 
-      xn2   = 0.0001
-      xn2m  = 0.0001
-      xn2l  = 0.0001
-      zinv  = 10000.
-      xn    = sqrt(xn2)
-!      f     = .0001
-      f     = 0.
+     xn2   = 0.0001
+     xn2m  = 0.0001
+     xn2l  = 0.0001
+     zinv  = 10000.
+     xn    = sqrt(xn2)
+!    f     = .0001
+     f     = 0.
 
-      hm     = 0. ! mountain height??
-      ampl  = 1.
-      xa    = 10000. ! mountain x rad?
-      ya    = 10000. ! mountain y rad?
+     hm     = 0. ! mountain height??
+     ampl  = 1.
+     xa    = 10000. ! mountain x rad?
+     ya    = 10000. ! mountain y rad?
 
-! time step
-!      dt    = 6.0
-!      dt    = 12.0
-!      dt    = 24.0
-      
 ! number of small steps
-!      ns0   = 6
-      ns0   = 8
-!      ns0   = 4
+     ns0   = 6
+!    ns0   = 8
+!    ns0   = 4
       
-! bubble temperature pert - default value set in rk3_main
-!      delt= 3. 
-!      delt= 2.
-
-
-      vnu   = 500.
-      xnu   = vnu*dt/d**2
+     vnu   = 500.
+     xnu   = vnu*dt/d**2
       
-!c      xnu   = .015
-!c      xnu   = .008
-!c      xnu   = .012
-!c      xnu   = .006 ! original value
-!c      xnu   = .003
-!      xnu   = .0
+!    xnu   = .015
+!    xnu   = .008
+!    xnu   = .012
+!    xnu   = .006 ! original value
+!    xnu   = .003
+!    xnu   = .0
 
-      smdiv = .1
-!      smdiv = .0
-      epssm = .1
+     smdiv = .1
+!    smdiv = .0
+     epssm = .1
 
-      tip   = 300. ! plotting interval in seconds
-!      tip   = 600.
-!      tip   = 300.
-      ip    = nint(tip/dt)
+     tip   = 300. ! plotting interval in seconds
+!    tip   = 600.
+!    tip   = 300.
+
+     ip    = nint(tip/dt)
       
-!     ip = 1
+!    ip = 1
       
-      tstp  = 12.*ip*dt ! total time is 12 plotting intervals
-      nz2   = nz1-1
-      t0    = 300.
-      r     = 287.
-      cp    = 1003.
-      rcv   = r/(cp-r)
-      p0    = 100000.
-      cti   = 1./(cp*t0)
-      g     = 9.81
-      c2    = cp*rcv*t0
-      cb    = 25.
-      delt = delt/t0
+     tstp  = 12.*ip*dt ! total time is 12 plotting intervals
+     nz2   = nz1-1
+     t0    = 300.
+     r     = 287.
+     cp    = 1003.
+     rcv   = r/(cp-r)
+     p0    = 100000.
+     cti   = 1./(cp*t0)
+     g     = 9.81
+     c2    = cp*rcv*t0
+     cb    = 25.
+     delt = delt/t0
 
-      zt    = 20000.
-      zd    = 10000.
-!      xnut = .025
-!      xnut = .05
-      xnut = .0
+     zt    = 20000.
+     zd    = 10000.
+!    xnut = .025
+!    xnut = .05
+     xnut = .0
 
-!
+!    xpll   = 0.
+!    xplr   = xl
+!    xpll   = 0.25*xl
+!    xplr   = 0.75*xl
+     xpll   =    xl/6.
+     xplr   = 5.*xl/6.
+!    ypll   = 0.
+!    yplr   = yl
+!    ypll   = 0.25*yl
+!    yplr   = 0.75*yl
+     ypll   =    yl/6.
+     yplr   = 5.*yl/6.
+     zplb   =  0.
+!    zplt   =  zd
+     zplt   =  zt
+     wmplt  = 50.
 
-!      xpll   = 0.
-!      xplr   = xl
-!c      xpll   = 0.25*xl
-!c      xplr   = 0.75*xl
-      xpll   =    xl/6.
-      xplr   = 5.*xl/6.
-!      ypll   = 0.
-!      yplr   = yl
-!c      ypll   = 0.25*yl
-!c      yplr   = 0.75*yl
-      ypll   =    yl/6.
-      yplr   = 5.*yl/6.
-      zplb   =  0.
-!      zplt   =  zd
-      zplt   =  zt
-      wmplt  = 50.
+     xc     = .5*xl
+     yc     = .5*yl
+     dx     = xl/float(nx1) ! = 1.5*side
+     dy     = yl/float(ny1) ! = sqrt(3)*side
+     dz     = zt/float(nz1)
+     nxc    = nx1/2+1
+     if(mod(nxc,2).eq.0) nxc=nxc-1
+     nyc    = ny1/2+1
+     dxp    = 100.*nint(sqrt(xl*yl/float(nx1*ny1))/100.)
+     dyp    = dxp
+     dzp    = dz
 
-      xc     = .5*xl
-      yc     = .5*yl
-      dx     = xl/float(nx1) ! = 1.5*side
-      dy     = yl/float(ny1) ! = sqrt(3)*side
-      dz     = zt/float(nz1)
-      nxc    = nx1/2+1
-      if(mod(nxc,2).eq.0) nxc=nxc-1
-      nyc    = ny1/2+1
-      dxp    = 100.*nint(sqrt(xl*yl/float(nx1*ny1))/100.)
-      dyp    = dxp
-      dzp    = dz
+     dts    = dt/float(ns0)
+     dtseps = .25*dts*(1.+epssm)
+     ns     = ns0
+     rd     = 1./d
+     rdx    = 1./dx
+     rdy    = 1./dy
+     rdz    = 1./dz
+     area   = 1.5*d*side
+     dtsa   = dts*side/area
+     dtsd   = dts/d
+     dtsf   = dts*sqrt(3.)/6.*f
+     dtsg   = dts*.5/d*g
+     c1f    = 2./3.
+     c2f    = 1./3.
 
-      dts    = dt/float(ns0)
-      dtseps = .25*dts*(1.+epssm)
-      ns     = ns0
-      rd     = 1./d
-      rdx    = 1./dx
-      rdy    = 1./dy
-      rdz    = 1./dz
-      area   = 1.5*d*side
-      dtsa   = dts*side/area
-      dtsd   = dts/d
-      dtsf   = dts*sqrt(3.)/6.*f
-      dtsg   = dts*.5/d*g
-      c1f    = 2./3.
-      c2f    = 1./3.
+     resm   = (1.-epssm)/(1.+epssm)
+     smdivx = smdiv*d **2/dts
+     smdivz = smdiv*dz**2/dts
 
-      resm   = (1.-epssm)/(1.+epssm)
-      smdivx = smdiv*d **2/dts
-      smdivz = smdiv*dz**2/dts
+     xnus0   = xnu/dt
+     xnusz0  = xnus0*rdz**2*d**2
 
-      xnus0   = xnu/dt
-      xnusz0  = xnus0*rdz**2*d**2
+!    xnusz0 = .25*xnusz0
 
-!c      xnusz0 = .25*xnusz0
-
-      xnus0   = 2./3.*xnus0      
+     xnus0   = 2./3.*xnus0      
 
 !*****adjustment to make mixing the same as xyz code
 !      deltax = sqrt(xl*yl/float(nx1*ny1))
@@ -173,62 +164,66 @@
 !     xnus0  = xnus0*2./3.*deltax**2/d**2
       write(6,*) 'XNU = ',xnu/dt,' XNUS = ',xnus0,' XNUSZ = ',xnusz0
       
-      iplt   = 1
-      ipi    = nint(xpll/dx)+1
-      ipf    = nint(xplr/dx)+1
-      jpi    = nint(ypll/dy)+1
-      jpf    = nint(yplr/dy)+1
-      nxpl   = ipf-ipi+1
-      nypl   = jpf-jpi+1
-      npl    = nxpl
-      nzpl   = nint(nz1*zplt/zt)
-      dtl    = dt
-      zw(1)  = 0.
-      ax(1)  = 0.
-      write(6,*) 'NX = ',nx,' NXC = ',nxc,' NY = ',ny,' NYC = ',nyc
-      write(6,*) 'xa =',xa,' xl =',xl,' yl =',yl,' dt   =',dt
-      write(6,*) 'zt =',zt,' zd =',zd,' xnut =',xnut
-!
+     iplt   = 1
+     ipi    = nint(xpll/dx)+1
+     ipf    = nint(xplr/dx)+1
+     jpi    = nint(ypll/dy)+1
+     jpf    = nint(yplr/dy)+1
+     nxpl   = ipf-ipi+1
+     nypl   = jpf-jpi+1
+     npl    = nxpl
+     nzpl   = nint(nz1*zplt/zt)
+     dtl    = dt
+     zw(1)  = 0.
+     ax(1)  = 0.
+
+     write(6,*) 'NX = ',nx,' NXC = ',nxc,' NY = ',ny,' NYC = ',nyc
+     write(6,*) 'xa =',xa,' xl =',xl,' yl =',yl,' dt   =',dt
+     write(6,*) 'zt =',zt,' zd =',zd,' xnut =',xnut
+ 
 ! xh and yh are the location (meters) of cell centers, starting with 0,0 for the lower left corner cell
-      do j=1,ny
-         do i=1,nx
-            xh(i,j) = (i-1)*1.5*side
-            x (i)   = xh(i,1)
-            if(mod(i,2).eq.0)  then
+
+     do j=1,ny
+        do i=1,nx
+           xh(i,j) = (i-1)*1.5*side
+           x (i)   = xh(i,1)
+           if(mod(i,2).eq.0)  then
                yh(i,j) = (j-1.5)*d
-            else
-               yh(i,j) = (j- 1.)*d
-            end if
-            xu3(i,j) = xh(i,j)+.75*side
-            yu3(i,j) = yh(i,j)+d/4.
-            xu1(i,j) = xh(i,j)+.75*side
-            yu1(i,j) = yh(i,j)-d/4.
-            xu2(i,j) = xh(i,j)
-            yu2(i,j) = yh(i,j)+d/2.
-         end do
+           else
+              yh(i,j) = (j- 1.)*d
+           end if
+           xu3(i,j) = xh(i,j)+.75*side
+           yu3(i,j) = yh(i,j)+d/4.
+           xu1(i,j) = xh(i,j)+.75*side
+           yu1(i,j) = yh(i,j)-d/4.
+           xu2(i,j) = xh(i,j)
+           yu2(i,j) = yh(i,j)+d/2.
+        end do
          y (j)   = yh(1,j)
-      end do
-!
-      do k=1,nz1
-         zu(k  )  = dz*(k-.5)
-         zw(k+1)  = dz*k
-         ax(k+1)  = 0.
-         ds(k)    = 0.
-         if(zu(k).le.zinv)  then
-            tz(k)=1.+xn2l/g*zu(k)
-         else
-            tz(k)=1.+xn2l/g*zinv+xn2/g*(zu(k)-zinv)
-         end if
-         if(zu(k).gt.zd+.1)  then
-            ds(k) = ds(k)+xnut*sin(.5*pi*(zu(k)-zd)/(zt-zd))**2
-         end if
-         ds(k) = ds(k)/float(2*ns0)
-      end do
-!
+     end do
+ 
+! zgrid - need both edge and cell centers
+
+     do k=1,nz1
+        zu(k  )  = dz*(k-.5)
+        zw(k+1)  = dz*k
+        ax(k+1)  = 0.
+        ds(k)    = 0.
+        if(zu(k).le.zinv)  then
+           tz(k)=1.+xn2l/g*zu(k)
+        else
+           tz(k)=1.+xn2l/g*zinv+xn2/g*(zu(k)-zinv)
+        end if
+        if(zu(k).gt.zd+.1)  then
+           ds(k) = ds(k)+xnut*sin(.5*pi*(zu(k)-zd)/(zt-zd))**2
+        end if
+        ds(k) = ds(k)/float(2*ns0)
+     end do
+ 
 !----------------
 !
-      call init_sound( tz,rel_hum,u1z,u2z,u3z,zu,nz1 )
-!
+     call init_sound( tz,rel_hum,u1z,u2z,u3z,zu,nz1 )
+ 
 !----------------
 !
 !  nondimensionalize the sounding
@@ -236,11 +231,12 @@
       do k=1,nz1
         tz(k) = (tz(k))/t0
         tzv(k) = tz(k)
-!c        rel_hum(k) = 0.
+!       rel_hum(k) = 0.
         qvzv(k) = 0.
       enddo
-!
+ 
 ! smooth terrain coord? Klemp (2011)
+
       do j=1,ny
          do i=1,nx
             hs(i,j) = hm/(1.+((xh(i,j)-xc)/xa)**2+((yh(i,j)-yc)/ya)**2)
@@ -252,7 +248,7 @@
             hh(i,j) = zt/(zt-hs(i,j))
          end do
       end do
-!
+ 
       if(iper.eq.0)  then
          do j=1,ny
             jp1 = min(j+1,ny)
