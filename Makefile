@@ -1,27 +1,30 @@
-OMP = 
-FOPTS = -O2
+#
+FFLAGS = -O2
+
+OUTPUTINC = ${NETCDF_INC}
+LINKOPTS  = ${NETCDF_LIB}
 
 .SUFFIXES: .f90 .F90
 
-OBJS = module_mp_nssl_2mom.o \
+OBJS = module_mp_nssl_2mom.o ncdf_utils.o\
        rk3_main.o rk3_init.o rk3_plot.o rk3_rhss.o rk3_rhsu1.o \
        rk3_rhsu2.o rk3_rhsu3.o \
        rk3_rhsw.o rk3_smlstep.o rk3_coefs.o kessler.o 
 
 .f90.o:
-	gfortran $(FOPTS) $(OMP) -c $*.f90
+	gfortran $(FFLAGS) -I$(OUTPUTINC) -c $*.f90
 
 .F90.o:
-	gfortran $(FOPTS) $(OMP) -c $*.F90
+	gfortran $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
 
 rk3_moist:  $(OBJS) plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
-	ncargf90 $(FOPTS) $(OMP) -o rk3_moist  $(OBJS)
+	ncargf90 $(FFLAGS) -I$(OUTPUTINC) -o rk3_moist $(OBJS) $(LINKOPTS)
 
 rk3_main.o: rk3_main.f90 plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
-	ncargf90 -c $(FOPTS) $(OMP) rk3_main.f90
+	ncargf90 -c $(FFLAGS) $(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
 
 rk3_plot.o: rk3_plot.f90
-	ncargf90 -c $(FOPTS) rk3_plot.f90
+	ncargf90 -c $(FFLAGS) $(OUTPUTINC) rk3_plot.f90
 
 clean:
 	rm -f *.o *.mod rk3_moist
