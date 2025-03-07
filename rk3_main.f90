@@ -101,6 +101,7 @@
       integer :: i, ii, im1, ip, ip1, iper, ipf, ipi, iplt, ipp, n
       integer :: itr, ittrm, iwmax
       integer :: j, j1, jj, jm1, jn, jp1, jper, jpf, jpi, jpj, jpm, jpp, jv1, jwmax
+      integer :: jjm1, jjp1, jjpj, jjpm, iim1
       integer :: k, kk, kkk, km1, kwmax, nit, npl, npr, ns, ns0
       integer :: nxc, nxpl, nyc, nypl, nz2, nzpl
       real :: p0, pi, pitop, pressure, qvs
@@ -992,7 +993,7 @@
 !
 !--------------
 !
-      include "plotting.inc.f90"
+      include "output.inc.f90"
 !
 !--------------
 !

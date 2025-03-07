@@ -4,6 +4,8 @@ FFLAGS = -O2
 OUTPUTINC = ${NETCDF_INC}
 LINKOPTS  = ${NETCDF_LIB}
 
+OUTPUT_CODE = output.inc.f90
+
 .SUFFIXES: .f90 .F90
 
 OBJS = module_mp_nssl_2mom.o ncdf_utils.o\
@@ -17,10 +19,10 @@ OBJS = module_mp_nssl_2mom.o ncdf_utils.o\
 .F90.o:
 	gfortran $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
 
-rk3_moist:  $(OBJS) plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
+rk3_moist:  $(OBJS) $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
 	ncargf90 $(FFLAGS) -I$(OUTPUTINC) -o rk3_moist $(OBJS) $(LINKOPTS)
 
-rk3_main.o: rk3_main.f90 plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
+rk3_main.o: rk3_main.f90 $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
 	ncargf90 -c $(FFLAGS) $(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
 
 rk3_plot.o: rk3_plot.f90
