@@ -274,7 +274,7 @@
 
 !--------------
 !
-      include "initialize.inc.f90"
+      include "initialize.inc"
 !
 !--------------
 
@@ -289,6 +289,7 @@
 !*****Large time step calculations
 !
       kkk = ip
+
       do nit = 0, total_steps
 
       if(nit .ne. 0) then
@@ -444,12 +445,10 @@
 ! other scalars
          do n = 1,nscalar
            call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-     &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
+                       xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
          enddo
 
-         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz,  &
-     &                 nz1,nx,ny,iper,jper      )
+         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper      )
 
 !
 !--------------
@@ -987,20 +986,27 @@
 !     write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
 
       end if !  take step only after plotting first
-!
-!
-!**** processing for plotting
-!
-!--------------
-!
-      include "output.inc.f90"
-!
-!--------------
-!
-      end do  ! for timestep loop
 
-      call clsgks()
+!===============================================================================
+!
+! Code block for NCAR GRAPHICS - uncomment if you want to use this 
+!
+!     include plotting.inc
+!
+!-------------------------------------------------------------------------------
+!
+! Code block for netCDF output - uncomment if you want to use this 
+!
+      include "ncdf.inc"
+!
+!===============================================================================
+
+      END DO  ! MAIN TIME STEP LOOP
+
+!===============================================================================
+! Uncomment out for NCAR GRAPHICS
+!
+!     call clsgks()
 
       stop
       end
-     
