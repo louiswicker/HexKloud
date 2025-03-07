@@ -1,6 +1,6 @@
 !WRF:MODEL_LAYER:PHYSICS
 
-! prepocessed on "Mar  7 2025" at "09:52:23"
+! prepocessed on "Mar  7 2025" at "14:01:06"
 
 
 
@@ -1791,9 +1791,15 @@ MODULE module_mp_nssl_2mom
 
     IF ( ipconc == 0 ) THEN
        IF ( hail_on == 1 ) THEN ! turn on graupel density for 1-moment scheme
-       lvh = 9
-       ltmp = 9
-       denscale(lvh) = 1
+         IF ( density_on >= 1 ) THEN ! turn on graupel density for 1-moment scheme
+          lvh = 9
+          ltmp = 9
+          denscale(lvh) = 1
+         ELSE
+          ltmp = lhab
+          lvh = 0
+          lvhl = 0
+         ENDIF
        ELSE ! no hail, 'LFO' scheme
        ltmp = lhab
        lhl = 0
@@ -2968,7 +2974,7 @@ SUBROUTINE nssl_2mom_driver(qv, qc, qr, qi, qs, qh, qhl, ccw, crw, cci, csw, chw
           an(ix,1,kz,lnh)  = chw(kz,ix,jy)
           IF ( lhl > 1 ) an(ix,1,kz,lnhl) = chl(kz,ix,jy)
           ENDIF
-          IF ( lvh > 0 ) an(ix,1,kz,lvh)  = vhw(kz,ix,jy)
+          IF ( lvh > 0 .and. present( vhw ) ) an(ix,1,kz,lvh)  = vhw(kz,ix,jy)
           IF ( lvhl > 0 .and. present( vhl ) ) an(ix,1,kz,lvhl)  = vhl(kz,ix,jy)
 
           IF ( ipconc >= 6 ) THEN
@@ -3562,7 +3568,7 @@ SUBROUTINE nssl_2mom_driver(qv, qc, qr, qi, qs, qh, qhl, ccw, crw, cci, csw, chw
 
 
 
-         IF ( lvh > 0 )  vhw(kz,ix,jy) = an(ix,1,kz,lvh)
+         IF ( lvh > 0 .and. present( vhw ) )  vhw(kz,ix,jy) = an(ix,1,kz,lvh)
          IF ( lvhl > 0 .and. present( vhl ) ) vhl(kz,ix,jy) = an(ix,1,kz,lvhl)
 
 #if ( WRF_CHEM == 1 )
@@ -6439,7 +6445,7 @@ END SUBROUTINE nssl_2mom_driver
       real swmasmx, dtmp
       real cd
       real cwc0 ! ,cwc1
-      real :: cwch(ngs), cwchl(ngs)
+      real :: cwch(ngscnt), cwchl(ngscnt)
       real :: cwchtmp,cwchltmp,xnutmp
       real pii
       real cimasx,cimasn
@@ -15596,7 +15602,6 @@ END SUBROUTINE nssl_2mom_driver
       infdo = 1
       IF ( rimdenvwgt > 0 ) infdo = 1
 
-      write(0,*) 'call setvtz, ngscnt = ',ngscnt
       call setvtz(ngscnt,qx,qxmin,qxw,cx,rho0,rhovt,xdia,cno,cnostmp,   &
      &                 xmas,vtxbar,xdn,xvmn,xvmx,xv,cdx,cdxgs,   &
      &                 ipconc,ndebug,ngs,nz,igs,kgs,fadvisc,   &
@@ -19212,8 +19217,6 @@ END SUBROUTINE nssl_2mom_driver
 
        ELSEIF ( ibinhlmlr == 1 ) THEN ! use incomplete gamma functions to approximate the bin results
 
-! #ifdef 1
-! #if (defined 1) && defined( COMMAS ) || defined( COMMASTMP )
 
        ELSEIF ( ibinhlmlr == -1 ) THEN ! OLD VERSION use incomplete gamma functions to approximate the bin results
 
