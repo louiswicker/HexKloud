@@ -142,6 +142,7 @@
       character(len=3),  dimension(20) :: varlabel
       character(len=20)                :: ncdf_file
 
+      integer           :: ncdf_nvar
       real, allocatable :: ncdf_var(:,:,:,:)
 
 ! Namelist declarations
@@ -156,63 +157,83 @@
 
       INQUIRE(file=trim(filename), exist=if_exist)
 
-      if (  if_exist ) then
+      IF ( if_exist ) THEN
   
        iunit = 15
        open(15,file=trim(filename),status='old',form='formatted')
        rewind(15)
        read(15,NML=main)
-      endif
 
-      if ( mp_physics == 1 ) then
-        nmoist = 3
-        nscalar = 0
-        allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
-        dz3d(:,:,:) = dz
-      elseif ( mp_physics == 18 ) then
-        nmoist = 7
-         if ( nssl_2moment_on == 1 ) then
+      ELSE
+
+        write(6,*) 'CANNOT FIND NAMELIST FILE, EXITING!'
+        stop
+
+      ENDIF
+
+! Next set up the microphyics
+
+      IF ( mp_physics == 1 ) THEN
+
+         nmoist  = 3
+         nscalar = 0
+         allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
+
+      ELSEIF ( mp_physics == 18 ) THEN
+
+         nmoist = 7
+
+         IF ( nssl_2moment_on == 1 ) THEN
+
             i = 5
             nscalar = 9
-         elseif ( nssl_2moment_on == 0 ) then
+
+         ELSEIF ( nssl_2moment_on == 0 ) THEN
+
             i = 0
             nscalar = 1
             lnc = 1; lnr = 1; lni = 1; lns = 1; lnh = 1; lnhl = 1; lccn = 1
             lvh = 1; lvhl = 1
             nssl_ccn_is_ccna = 0
-         endif
-         
-        allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
-        allocate( rainnc(nx,ny), rainncv(nx,ny) )
 
-! call init?
-       nssl_params(:)  = 0
-       nssl_params(1)  = nssl_cccn
-       nssl_params(2)  = nssl_alphah
-       nssl_params(3)  = nssl_alphahl
-       nssl_params(4)  = nssl_cnoh
-       nssl_params(5)  = nssl_cnohl
-       nssl_params(6)  = nssl_cnor
-       nssl_params(7)  = nssl_cnos
-       nssl_params(8)  = nssl_rho_qh
-       nssl_params(9)  = nssl_rho_qhl
-       nssl_params(10) = nssl_rho_qs
-       nssl_params(11) = 0 ! nssl_ipelec_tmp
-       nssl_params(12) = 0 ! config_flags%nssl_isaund
-       nssl_params(13) = 0 ! reserved
-       nssl_params(14) = 0 ! reserved
-       nssl_params(15) = 0 ! reserved
-       CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0,        &
-                           nssl_density_on=.true.,                             &
-                           nssl_hail_on=.true.,                                &
-                           nssl_ccn_on= ( i >= 5 ),                            &
-                           nssl_icdx=6,                                        &
-                           nssl_icdxhl=6,                                      &
-                           ccn_is_ccna=nssl_ccn_is_ccna)
-      else
+         ENDIF
+         
+         allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
+         allocate( rainnc(nx,ny), rainncv(nx,ny) )
+
+! Init nssl microphysics
+
+         nssl_params(:)  = 0
+         nssl_params(1)  = nssl_cccn
+         nssl_params(2)  = nssl_alphah
+         nssl_params(3)  = nssl_alphahl
+         nssl_params(4)  = nssl_cnoh
+         nssl_params(5)  = nssl_cnohl
+         nssl_params(6)  = nssl_cnor
+         nssl_params(7)  = nssl_cnos
+         nssl_params(8)  = nssl_rho_qh
+         nssl_params(9)  = nssl_rho_qhl
+         nssl_params(10) = nssl_rho_qs
+         nssl_params(11) = 0 ! nssl_ipelec_tmp
+         nssl_params(12) = 0 ! config_flags%nssl_isaund
+         nssl_params(13) = 0 ! reserved
+         nssl_params(14) = 0 ! reserved
+         nssl_params(15) = 0 ! reserved
+         CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0,        &
+                             nssl_density_on=.true.,                             &
+                             nssl_hail_on=.true.,                                &
+                             nssl_ccn_on= ( i >= 5 ),                            &
+                             nssl_icdx=6,                                        &
+                             nssl_icdxhl=6,                                      &
+                             ccn_is_ccna=nssl_ccn_is_ccna)
+      ELSE
+
         write(0,*) 'unsupported value of mp_physics: ', mp_physics
         stop
-      endif
+
+      ENDIF
+
+! Set up advection scheme
       
       if ( iadvord == 2 ) then
         order = 'second'
@@ -236,19 +257,19 @@
                 qx1(nz1,nx,ny,nmoist),  &
                 fqx(nz1,nx,ny,nmoist) )
 
-      if ( nscalar > 0 ) then
+      IF ( nscalar > 0 ) THEN
         allocate( rsx(nz1,nx,ny,nscalar),  &
-                 rsx1(nz1,nx,ny,nscalar), &
-                 sx(nz1,nx,ny,nscalar),   &
-                 sx1(nz1,nx,ny,nscalar),  &
-                 fsx(nz1,nx,ny,nscalar) )
-      else
+                  rsx1(nz1,nx,ny,nscalar), &
+                  sx(nz1,nx,ny,nscalar),   &
+                  sx1(nz1,nx,ny,nscalar),  &
+                  fsx(nz1,nx,ny,nscalar) )
+      ELSE
         allocate( rsx(1,1,1,1),  &
-                 rsx1(1,1,1,1), &
-                 sx(1,1,1,1),   &
-                 sx1(1,1,1,1),  &
-                 fsx(1,1,1,1) )
-      endif
+                  rsx1(1,1,1,1), &
+                  sx(1,1,1,1),   &
+                  sx1(1,1,1,1),  &
+                  fsx(1,1,1,1) )
+      ENDIF
 
 !--------------
 !

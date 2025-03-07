@@ -800,14 +800,7 @@
 !===============================================================================
 ! netcdf writeout
 
-     allocate(ncdf_var(nxpl,nypl,nz1,10) )
- 
-     ncdf_file = 'hexcloud.XXXX.nc'
-     write(ncdf_file(10:13),100) int(time)
-100 format(i4.4)
-
-     write(6,*) 'Now writing ', ncdf_file
-     write(6,*) ''
+! for KESSLER or NSSL-2M runs, these variables will always be outputted
 
      varlabel(1)  = 'U  '
      varlabel(2)  = 'V  '
@@ -818,11 +811,39 @@
      varlabel(6)  = 'Qc '
      varlabel(7)  = 'Qr'
 
-     varlabel(8)  = 'Qi '
-     varlabel(9)  = 'Qh'
-     varlabel(10) = 'REF'
+     IF ( mp_physics == 18 ) THEN  ! NSSL - 2M
 
-     DO k = 1,nz1
+         ncdf_nvar = 11
+
+         allocate(ncdf_var(nxpl,nypl,nz1,ncdf_nvar) )
+
+         varlabel(8)  = 'Qi '
+         varlabel(9)  = 'Qs '
+         varlabel(10) = 'Qh'
+         varlabel(11) = 'REF'
+
+     ELSE  ! Kessler microphysics
+
+         ncdf_nvar = 7
+
+         allocate(ncdf_var(nxpl,nypl,nz1,ncdf_nvar) )
+
+     ENDIF
+
+! Create filename for netCDF file
+ 
+     ncdf_file = 'hexcloud.XXXX.nc'
+     write(ncdf_file(10:13),100) int(time)
+100 format(i4.4)
+
+!===============================================================================
+
+     write(6,*) 'Now writing ', ncdf_file
+     write(6,*) ''
+
+!===============================================================================
+
+     DO k = 1,nz1      ! outer k-loop for 3D arrays
 
         do j=1,nypl
            jj = j+jpi-1
@@ -881,30 +902,59 @@
          do j=1,nypl
            jj = j+jpi-1
            do i=1,nxpl
-              ii = i+ipi-1
-              if(mod(ii,2).eq.0.)  then
-                 jp1 =min(jj+1,ny)
-                 if(jper*jj.eq.ny)  jp1 = 2
-                 ncdf_var(i,j,k,5) = 0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
-                 ncdf_var(i,j,k,6) = 1000.0*0.5*(qx(k,ii,jj,lc)+qx(k,ii,jp1,lc))
-                 ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
-                 ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
-                 ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,lh))
-                 ncdf_var(i,j,k,10)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
-              else
-                 ncdf_var(i,j,k,5) = 1000.0 * (qx(k,ii,jj,lv) - qvzv(k))
-                 ncdf_var(i,j,k,6) = 1000.0 * qx(k,ii,jj,lc)
-                 ncdf_var(i,j,k,7) = 1000.0 * qx(k,ii,jj,lr)
-                 ncdf_var(i,j,k,8) = 1000.0 * qx(k,ii,jj,li)
-                 ncdf_var(i,j,k,9) = 1000.0 * qx(k,ii,jj,lh)
-                 ncdf_var(i,j,k,10)= dbz(k,ii,jj)
-              end if
-            end do
-         end do
+             ii = i+ipi-1
 
-     END DO
+             IF( mod(ii,2) == 0 )  THEN
 
-     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz, 10, x, y, zu, ncdf_var, varlabel)
+               jp1 =min(jj+1,ny)
+               if(jper*jj.eq.ny)  jp1 = 2
+               ncdf_var(i,j,k,5) = 0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
+               ncdf_var(i,j,k,6) = 1000.0*0.5*(qx(k,ii,jj,lc)+qx(k,ii,jp1,lc))
+               ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
+
+             ELSE
+
+                ncdf_var(i,j,k,5) = 1000.0 * (qx(k,ii,jj,lv) - qvzv(k))
+                ncdf_var(i,j,k,6) = 1000.0 * qx(k,ii,jj,lc)
+                ncdf_var(i,j,k,7) = 1000.0 * qx(k,ii,jj,lr)
+
+             ENDIF
+           ENDDO
+         ENDDO
+
+         IF( mp_physics == 18 ) THEN
+
+           DO j=1,nypl
+              jj = j+jpi-1
+              DO i=1,nxpl
+                ii = i+ipi-1
+                IF(mod(ii,2) == 0) THEN
+
+                   jp1 =min(jj+1,ny)
+                   if(jper*jj.eq.ny)  jp1 = 2
+
+                   ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
+                   ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,ls)+qx(k,ii,jp1,ls))
+                   ncdf_var(i,j,k,10)= 1000.0*0.5*(qx(k,ii,jj,lh)+qx(k,ii,jp1,lh))
+                   ncdf_var(i,j,k,11)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
+
+                ELSE
+
+                   ncdf_var(i,j,k,8) = 1000.0 * qx(k,ii,jj,li)
+                   ncdf_var(i,j,k,9) = 1000.0 * qx(k,ii,jj,ls)
+                   ncdf_var(i,j,k,10)= 1000.0 * qx(k,ii,jj,lh)
+                   ncdf_var(i,j,k,11)= dbz(k,ii,jj)
+
+                ENDIF
+
+              ENDDO
+           ENDDO
+
+         ENDIF
+
+     ENDDO   ! outer k-loop
+
+     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz1, ncdf_nvar, x, y, zu, ncdf_var, varlabel)
 
      write(6,*) 'Finished writing ', ncdf_file
      write(6,*) ''
