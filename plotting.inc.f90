@@ -19,6 +19,21 @@
          
          if((kkk.ge.ip).or. (nit.eq.0)) then      
 
+     if ( mp_physics == 1 ) then ! set dbz for Kessler micro
+       do j = 1,ny
+         do i = 1,nx
+           do k = 1,nz1
+             tmp = 2.46e4*(1000.*rqx(k,i,j,lr))**1.27
+             if ( tmp > 0.0 ) then
+                dbz(k,i,j) = max(0.0, 10.0 * log10(tmp))
+             else
+                dbz(k,i,j) = 0.0
+             endif
+           enddo
+          enddo
+         enddo
+     endif
+
             print 901 ,time
   901       format(1h ,'time =',f10.1)
             kkk=0
@@ -285,6 +300,22 @@
 !               call curve(x,hxpl,nx)
                call frame
 
+             if ( nmoist >= lhl ) then
+               do i=1,nxpl
+                  ii = i+ipi-1
+                  do k=1,nz1
+                     if(mod(ii,2).eq.0.)  then
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,lhl)+qx(k,ii,jp1,lhl))
+                     else
+                        pltx(i,k) = 1000.*qx(k,ii,j,lhl)
+                     end if
+                  end do
+               end do
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'hl',plane,'p',  &
+     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+               endif
 
                do i=1,nxpl
                   ii = i+ipi-1
@@ -772,6 +803,26 @@
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
 
+
+               IF ( nmoist >= lhl ) THEN
+               do j=1,nypl
+                  jj = j+jpi-1
+                  do i=1,nxpl
+                     ii = i+ipi-1
+                     if(mod(ii,2).eq.0.)  then
+                        jp1 =min(jj+1,ny)
+                        if(jper*jj.eq.ny)  jp1 = 2
+                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,lhl)+qx(k,ii,jp1,lhl))
+                     else
+                        plt(i,j) = 1000.*qx(k,ii,jj,lhl)
+                     end if
+                  end do
+               end do
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'hl',plane,'h ',  &
+     &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
+               call frame
+               ENDIF
+
                do j=1,nypl
                   jj = j+jpi-1
                   do i=1,nxpl
@@ -800,11 +851,12 @@
 !===============================================================================
 ! netcdf writeout
 
-     allocate(ncdf_var(nxpl,nypl,nz1,10) )
- 
-     ncdf_file = 'hexcloud.XXXX.nc'
-     write(ncdf_file(10:13),100) int(time)
-100 format(i4.4)
+     if ( writenc ) then
+     write(timestr,'(i5.5)') int(time)
+     ncdf_file = trim(runname)//'.'//timestr//'.nc'
+!     ncdf_file = 'hexcloud.XXXX.nc'
+!     write(ncdf_file(10:13),100) int(time)
+! 100 format(i4.4)
 
      write(6,*) 'Now writing ', ncdf_file
      write(6,*) ''
@@ -818,9 +870,37 @@
      varlabel(6)  = 'Qc '
      varlabel(7)  = 'Qr'
 
-     varlabel(8)  = 'Qi '
-     varlabel(9)  = 'Qh'
-     varlabel(10) = 'REF'
+     n = 7
+     if ( lhl > 1 ) then
+       varlabel(n+1)  = 'Qi '
+       varlabel(n+2)  = 'Qs '
+       varlabel(n+3)  = 'Qh '
+       varlabel(n+4)  = 'Qhl'
+       n = n+4
+     endif
+     
+     if ( nscalar > 1 ) then
+       varlabel(n+1)  = 'ccw'
+       varlabel(n+2)  = 'crw'
+       varlabel(n+3)  = 'cci'
+       varlabel(n+4)  = 'csw'
+       varlabel(n+5)  = 'chw'
+       varlabel(n+6)  = 'chl'
+       varlabel(n+7)  = 'ccn'
+       varlabel(n+8)  = 'vh '
+       varlabel(n+9)  = 'vhl'
+       n = n+nscalar
+     endif
+     
+       varlabel(n+1) = 'REF'
+       n = n+1
+
+     nvar = n
+
+     write(6,*) 'nvar = ',nvar
+     
+     
+     allocate(ncdf_var(nxpl,nypl,nz1,nvar) )
 
      DO k = 1,nz1
 
@@ -886,29 +966,46 @@
                  jp1 =min(jj+1,ny)
                  if(jper*jj.eq.ny)  jp1 = 2
                  ncdf_var(i,j,k,5) = 0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
-                 ncdf_var(i,j,k,6) = 1000.0*0.5*(qx(k,ii,jj,lc)+qx(k,ii,jp1,lc))
-                 ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
-                 ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
-                 ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,lh))
-                 ncdf_var(i,j,k,10)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
+                 do n = 2,nmoist
+                  ncdf_var(i,j,k,4+n) = 1000.0*0.5*(qx(k,ii,jj,n)+qx(k,ii,jp1,n))
+                 enddo
+!                  ncdf_var(i,j,k,6) = 1000.0*0.5*(qx(k,ii,jj,lc)+qx(k,ii,jp1,lc))
+!                  ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
+!                  ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
+!                  ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,lh))
+                 do n = 1,nscalar
+                   ncdf_var(i,j,k,4+nmoist+n) = 0.5*(sx(k,ii,jj,n)+sx(k,ii,jp1,n))
+                 enddo
+                  ncdf_var(i,j,k,4+nmoist+nscalar+1)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
               else
                  ncdf_var(i,j,k,5) = 1000.0 * (qx(k,ii,jj,lv) - qvzv(k))
-                 ncdf_var(i,j,k,6) = 1000.0 * qx(k,ii,jj,lc)
-                 ncdf_var(i,j,k,7) = 1000.0 * qx(k,ii,jj,lr)
-                 ncdf_var(i,j,k,8) = 1000.0 * qx(k,ii,jj,li)
-                 ncdf_var(i,j,k,9) = 1000.0 * qx(k,ii,jj,lh)
-                 ncdf_var(i,j,k,10)= dbz(k,ii,jj)
+                 do n = 2,nmoist
+                  ncdf_var(i,j,k,4+n) = 1000.0*qx(k,ii,jj,n)
+                 enddo
+                 do n = 1,nscalar
+                   ncdf_var(i,j,k,4+nmoist+n) = sx(k,ii,jj,n)
+                 enddo
+                  ncdf_var(i,j,k,4+nmoist+nscalar+1)= dbz(k,ii,jj)
+
+!                  ncdf_var(i,j,k,6) = 1000.0 * qx(k,ii,jj,lc)
+!                  ncdf_var(i,j,k,7) = 1000.0 * qx(k,ii,jj,lr)
+!                  ncdf_var(i,j,k,8) = 1000.0 * qx(k,ii,jj,li)
+!                  ncdf_var(i,j,k,9) = 1000.0 * qx(k,ii,jj,lh)
+!                 ncdf_var(i,j,k,10)= dbz(k,ii,jj)
               end if
             end do
          end do
 
      END DO
 
-     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz, 10, x, y, zu, ncdf_var, varlabel)
+     
+     CALL WRITE_NC4_FILE(ncdf_file, nxpl, nypl, nz1, nvar, x, y, zu, ncdf_var, varlabel, time)
 
      write(6,*) 'Finished writing ', ncdf_file
      write(6,*) ''
 
      deallocate(ncdf_var)
+     
+     endif ! writenc
 
      end if

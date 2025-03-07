@@ -11,6 +11,8 @@
   delt = 3.0
   iwty = 20 !
   debug = .false.
+  runname = 'hexcloud',
+  writenc = .true.,
 !  iper = 1,
 !  jper = 1,
 /

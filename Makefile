@@ -1,5 +1,7 @@
 #
 FFLAGS = -O2
+#FFLAGS = -O0 -g -fcheck=bounds
+FFLAGS = -O0 -g -fcheck=all
 
 OUTPUTINC = ${NETCDF_INC}
 LINKOPTS  = ${NETCDF_LIB}
@@ -21,10 +23,13 @@ rk3_moist:  $(OBJS) plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
 	ncargf90 $(FFLAGS) -I$(OUTPUTINC) -o rk3_moist $(OBJS) $(LINKOPTS)
 
 rk3_main.o: rk3_main.f90 plotting.inc.f90 initialize.inc.f90 boundaries.inc.f90
-	ncargf90 -c $(FFLAGS) $(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
+	ncargf90 -c $(FFLAGS) -I$(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
 
 rk3_plot.o: rk3_plot.f90
-	ncargf90 -c $(FFLAGS) $(OUTPUTINC) rk3_plot.f90
+	ncargf90 -c $(FFLAGS) -I$(OUTPUTINC) rk3_plot.f90
+
+module_mp_nssl_2mom.o: module_mp_nssl_2mom.F90
+	gfortran $(OMP) $(FFLAGS) -c module_mp_nssl_2mom.F90
 
 clean:
 	rm -f *.o *.mod rk3_moist

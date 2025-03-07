@@ -104,6 +104,7 @@
       integer :: j, j1, jj, jm1, jn, jp1, jper, jpf, jpi, jpj, jpm, jpp, jv1, jwmax
       integer :: k, kk, kkk, km1, kwmax, nit, npl, npr, ns, ns0
       integer :: nxc, nxpl, nyc, nypl, nz2, nzpl
+      integer :: nxnc, nync
       real :: p0, pi, pitop, pressure, qvs
       real :: r, rad, radx, rady, radz, rcv, rd
       real :: rdx, rdy, rdz
@@ -140,10 +141,13 @@
 
 ! Arrays for netCDF
 
-      character(len=3),  dimension(20) :: varlabel
-      character(len=20)                :: ncdf_file
-
+      character(len=3),  dimension(30) :: varlabel
+      character(len=61)                :: ncdf_file
+      character(len=20)                :: runname = 'hexcloud'
+      character(len=5)                 :: timestr
+      integer                          :: nvar
       real, allocatable :: ncdf_var(:,:,:,:)
+      logical                          :: writenc = .true.
 
 ! Namelist declarations
 
@@ -151,7 +155,8 @@
       logical           :: if_exist
       integer           :: iunit
 
-      namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, dt, iwty, debug
+      namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
+                      dt, iwty, debug, runname, writenc
 
 ! Start here and read namelist
 
@@ -163,12 +168,14 @@
        open(15,file=trim(filename),status='old',form='formatted')
        rewind(15)
        read(15,NML=main)
+       close(15)
       endif
 
       if ( mp_physics == 1 ) then
         nmoist = 3
         nscalar = 0
-        allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
+        li = 0; ls = 0; lh = 0; lhl = 0
+        allocate( dz3d(1,1,1), dbz(nz1,nx,ny), ws(1,1,1), pres(1,1,1) )
 !        dz3d(:,:,:) = dz
       elseif ( mp_physics == 18 ) then
         nmoist = 7
