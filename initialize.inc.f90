@@ -88,7 +88,7 @@
       
 !    ip = 1
       
-     tstp  = 6.*ip*dt ! total time is 12 plotting intervals
+     tstp  = 12.*ip*dt ! total time is 12 plotting intervals
      nz2   = nz1-1
      t0    = 300.
      r     = 287.
@@ -107,18 +107,18 @@
 !    xnut = .05
      xnut = .0
 
-!    xpll   = 0.
-!    xplr   = xl
+    xpll   = 0.
+    xplr   = xl
 !    xpll   = 0.25*xl
 !    xplr   = 0.75*xl
-     xpll   =    xl/6.
-     xplr   = 5.*xl/6.
-!    ypll   = 0.
-!    yplr   = yl
+!     xpll   =    xl/6.
+!     xplr   = 5.*xl/6.
+    ypll   = 0.
+    yplr   = yl
 !    ypll   = 0.25*yl
 !    yplr   = 0.75*yl
-     ypll   =    yl/6.
-     yplr   = 5.*yl/6.
+!     ypll   =    yl/6.
+!     yplr   = 5.*yl/6.
      zplb   =  0.
 !    zplt   =  zd
      zplt   =  zt
