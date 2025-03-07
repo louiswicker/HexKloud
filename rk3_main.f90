@@ -1,3 +1,4 @@
+!===============================================================================
 !********** nonlinear nonhydrostatic time-split model on hexagonal grid
 !********** mass conserving, flux-form variables
 !********** open or periodic boundaries.
@@ -5,24 +6,28 @@
 !********** includes atmospheric mean state. constant stability
 !********** reference code for terrain-folling height coordinate model
 !
-!  this code incorporates the wicker and skamarock RK2 timesplitting
+!  This code incorporates the wicker and skamarock RK3 timesplitting
 !  algorithm
-!                                                                     72
-!  this code also includes kessler microphysics
-!
-      program hexgrid
+!                                                                     
+!  This code also includes kessler microphysics
+!  This code also includes NSSL-2M scheme microphysics (Ted Mansell)
+!===============================================================================
+
+      PROGRAM HEXKLOUD   ! In honor of Joe Klemp
 
       USE module_mp_nssl_2mom
 
       implicit none
-!      parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+
       integer, parameter :: nz= 41, nx= 91, ny= 79, nz1=nz-1, nx1=nx-1, ny1=ny-1
-!      parameter (nz= 41, nx= 47, ny= 40, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 121, ny=105, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 181, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
-!      parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+
+!     parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 47, ny= 40, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 121, ny=105, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 181, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
+!     parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 
       real u1  (nz1,0:nx,ny), u11 (nz1,0:nx,ny), ru1 (nz1,0:nx,ny)  &
      &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
@@ -53,31 +58,23 @@
      &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
      &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
 
-!      real :: rhom  (nz1,nx,ny), rrt (nz1,nx  ,ny) &
-!              ,rtt (nz1,nx  ,ny), ru1t(nz1,0:nx,ny) &
-!              ,ru2t(nz1,nx,0:ny), ru3t(nz1,0:nx,ny) &
-!              , rwt (nz1,nx  ,ny)
-
       real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
      &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
      &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)  &
      &    ,t_d_tend (nz1,nx  ,ny)
 
-!       real rqv (nz1,nx,ny), rqc(nz1,nx,ny) , rqr (nz1,nx,ny)  &
-!      &    ,rqv1(nz1,nx,ny), rqc1(nz1,nx,ny), rqr1(nz1,nx,ny)  &
-!      &    ,qv1 (nz1,nx,ny), qc1 (nz1,nx,ny), qr1 (nz1,nx,ny)  &
-!      &    ,qv  (nz1,nx,ny), qc  (nz1,nx,ny), qr  (nz1,nx,ny)  &
-!      &    ,fqv (nz1,nx,ny), fqc (nz1,nx,ny), fqr (nz1,nx,ny)
-      
-      ! rqx,rqx1 are mass content (qx*rho)
-      ! qx, qx1 are mass mixing ratio
-      ! fqx are tendencies?
+! rqx,rqx1 are mass content (qx*rho)
+! qx, qx1 are mass mixing ratio
+! fqx are tendencies?
+! Now 4D to accomadate NSSL-2M scheme
+
       real, allocatable :: rqx(:,:,:,:),rqx1(:,:,:,:), qx(:,:,:,:), qx1(:,:,:,:), fqx(:,:,:,:)
       real, allocatable :: rsx(:,:,:,:),rsx1(:,:,:,:), sx(:,:,:,:), sx1(:,:,:,:), fsx(:,:,:,:)
       real, allocatable :: dz3d(:,:,:), dbz(:,:,:),ws(:,:,:), pres(:,:,:)
       real, allocatable :: rainnc(:,:), rainncv(:,:)
 
-      integer :: nmoist,nscalar
+      integer :: nmoist, nscalar
+
       real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
      &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
      &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
@@ -87,18 +84,12 @@
 
       real*4 Azero(1)
 
-!      common /grid/ xh(nx,ny), xu1(nx,ny), xu2(nx,ny), xu3(nx,ny),
-!     &              yh(nx,ny), yu1(nx,ny), yu2(nx,ny), yu3(nx,ny)
-
       common /grid/ xh, xu1, xu2, xu3, yh, yu1, yu2, yu3
 
       integer imass, rk_step, ns_rk, total_steps
       character*3 slice(2)
       character*6 plane
       equivalence (plane,slice)
-      logical second
-      parameter(second = .true.)
-!     parameter(second = .false.)
 
       integer, PARAMETER :: IERF=6,LUNI=2,IWID=1  
       integer :: IWTY = 20 !  1=ncgm/gmeta; 20=PostScript
@@ -110,6 +101,7 @@
       integer :: i, ii, im1, ip, ip1, iper, ipf, ipi, iplt, ipp, n
       integer :: itr, ittrm, iwmax
       integer :: j, j1, jj, jm1, jn, jp1, jper, jpf, jpi, jpj, jpm, jpp, jv1, jwmax
+      integer :: jjm1, jjp1, jjpj, jjpm, iim1
       integer :: k, kk, kkk, km1, kwmax, nit, npl, npr, ns, ns0
       integer :: nxc, nxpl, nyc, nypl, nz2, nzpl
       real :: p0, pi, pitop, pressure, qvs
@@ -122,91 +114,127 @@
       real :: xht, xl, xn, xn2, xn2l, xn2m, xnu, xnus, xnus0, xnusz, xnusz0, xnut
       real :: ya, yc, yl, yht
       real :: zcent, zd, zinv, zt, ztemp
-      character(LEN=50) :: filename = 'namelist.input'
-      logical if_exist
-      integer :: iunit
       integer, parameter :: lv = 1, lc = 2, lr = 3
       integer :: li = 4, ls = 5, lh = 6, lhl = 7
       integer :: lnc = 1, lnr = 2, lni = 3, lns = 4, lnh = 5, lnhl = 6, lccn = 7
       integer :: lvh = 8, lvhl = 9
       real    :: tmp
-      REAL, DIMENSION(20) :: nssl_params
+      real, dimension(20) :: nssl_params
 
       integer :: IDS=1,IDE=nx, JDS=1,JDE=ny, KDS=1,KDE=nz1, &
                  IMS=1,IME=nx, JMS=1,JME=ny, KMS=1,KME=nz1, &
                  ITS=1,ITE=nx, JTS=1,JTE=ny, KTS=1,KTE=nz1
-      real    :: nssl_cccn = 6.e8, nssl_alphah=0, nssl_alphahl=1,  &
-    &            nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
-    &            nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
 
-      integer :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
-      integer :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
-      integer :: iadvord = 5 ! advection order
-      real    :: delt = 3. ! bubble temp
-      real    :: dt = 6.0 ! time step
-      character(len=6) :: order
-      logical :: debug = .false.
+      real    :: nssl_cccn = 6.e8, nssl_alphah=0, nssl_alphahl=1,  &
+                 nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
+                 nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
+
+      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
+      integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
+      integer           :: iadvord = 5 ! advection order
+      character(len=6)  :: order
+
+      real              :: delt  = 3.     ! bubble temp
+      real              :: dt    = 6.0    ! time step
+      logical           :: debug = .false.
+
+! Arrays for netCDF
+
+      character(len=3),  dimension(20) :: varlabel
+      character(len=20)                :: ncdf_file
+
+      integer           :: ncdf_nvar
+      real, allocatable :: ncdf_var(:,:,:,:)
+
+! Namelist declarations
+
+      character(LEN=50) :: filename = 'namelist.input'
+      logical           :: if_exist
+      integer           :: iunit
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, dt, iwty, debug
 
+! Start here and read namelist
+
       INQUIRE(file=trim(filename), exist=if_exist)
 
-      if (  if_exist ) then
+      IF ( if_exist ) THEN
   
        iunit = 15
        open(15,file=trim(filename),status='old',form='formatted')
        rewind(15)
        read(15,NML=main)
-      endif
 
-      if ( mp_physics == 1 ) then
-        nmoist = 3
-        nscalar = 0
-        allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
-        dz3d(:,:,:) = dz
-      elseif ( mp_physics == 18 ) then
-        nmoist = 7
-         if ( nssl_2moment_on == 1 ) then
+      ELSE
+
+        write(6,*) 'CANNOT FIND NAMELIST FILE, EXITING!'
+        stop
+
+      ENDIF
+
+! Next set up the microphyics
+
+      IF ( mp_physics == 1 ) THEN
+
+         nmoist  = 3
+         nscalar = 0
+         allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
+
+      ELSEIF ( mp_physics == 18 ) THEN
+
+         nmoist = 7
+
+         IF ( nssl_2moment_on == 1 ) THEN
+
             i = 5
             nscalar = 9
-         elseif ( nssl_2moment_on == 0 ) then
+
+         ELSEIF ( nssl_2moment_on == 0 ) THEN
+
             i = 0
             nscalar = 1
             lnc = 1; lnr = 1; lni = 1; lns = 1; lnh = 1; lnhl = 1; lccn = 1
             lvh = 1; lvhl = 1
             nssl_ccn_is_ccna = 0
-         endif
+
+         ENDIF
          
-        allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
-        dz3d(:,:,:) = dz
-        allocate( rainnc(nx,ny), rainncv(nx,ny) )
-       ! call init?
-       nssl_params(:)  = 0
-       nssl_params(1)  = nssl_cccn
-       nssl_params(2)  = nssl_alphah
-       nssl_params(3)  = nssl_alphahl
-       nssl_params(4)  = nssl_cnoh
-       nssl_params(5)  = nssl_cnohl
-       nssl_params(6)  = nssl_cnor
-       nssl_params(7)  = nssl_cnos
-       nssl_params(8)  = nssl_rho_qh
-       nssl_params(9)  = nssl_rho_qhl
-       nssl_params(10) = nssl_rho_qs
-       nssl_params(11) = 0 ! nssl_ipelec_tmp
-       nssl_params(12) = 0 ! config_flags%nssl_isaund
-       nssl_params(13) = 0 ! reserved
-       nssl_params(14) = 0 ! reserved
-       nssl_params(15) = 0 ! reserved
-         CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0, &
-           nssl_density_on=.true.,                             &
-           nssl_hail_on=.true.,                                &
-           nssl_ccn_on= ( i >= 5 ),                            &
-           nssl_icdx=6,                                        &
-           nssl_icdxhl=6,                                      &
-           ccn_is_ccna=nssl_ccn_is_ccna)
-      else
+         allocate( dz3d(nz1,nx,ny), dbz(nz1,nx,ny), ws(nz1,nx,ny), pres(nz1,nx,ny) )
+         allocate( rainnc(nx,ny), rainncv(nx,ny) )
+
+! Init nssl microphysics
+
+         nssl_params(:)  = 0
+         nssl_params(1)  = nssl_cccn
+         nssl_params(2)  = nssl_alphah
+         nssl_params(3)  = nssl_alphahl
+         nssl_params(4)  = nssl_cnoh
+         nssl_params(5)  = nssl_cnohl
+         nssl_params(6)  = nssl_cnor
+         nssl_params(7)  = nssl_cnos
+         nssl_params(8)  = nssl_rho_qh
+         nssl_params(9)  = nssl_rho_qhl
+         nssl_params(10) = nssl_rho_qs
+         nssl_params(11) = 0 ! nssl_ipelec_tmp
+         nssl_params(12) = 0 ! config_flags%nssl_isaund
+         nssl_params(13) = 0 ! reserved
+         nssl_params(14) = 0 ! reserved
+         nssl_params(15) = 0 ! reserved
+         CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0,        &
+                             nssl_density_on=.true.,                             &
+                             nssl_hail_on=.true.,                                &
+                             nssl_ccn_on= ( i >= 5 ),                            &
+                             nssl_icdx=6,                                        &
+                             nssl_icdxhl=6,                                      &
+                             ccn_is_ccna=nssl_ccn_is_ccna)
+      ELSE
+
         write(0,*) 'unsupported value of mp_physics: ', mp_physics
-      endif
+        stop
+
+      ENDIF
+
+! Set up advection scheme
       
       if ( iadvord == 2 ) then
         order = 'second'
@@ -230,25 +258,27 @@
                 qx1(nz1,nx,ny,nmoist),  &
                 fqx(nz1,nx,ny,nmoist) )
 
-      if ( nscalar > 0 ) then
+      IF ( nscalar > 0 ) THEN
         allocate( rsx(nz1,nx,ny,nscalar),  &
-                 rsx1(nz1,nx,ny,nscalar), &
-                 sx(nz1,nx,ny,nscalar),   &
-                 sx1(nz1,nx,ny,nscalar),  &
-                 fsx(nz1,nx,ny,nscalar) )
-      else
+                  rsx1(nz1,nx,ny,nscalar), &
+                  sx(nz1,nx,ny,nscalar),   &
+                  sx1(nz1,nx,ny,nscalar),  &
+                  fsx(nz1,nx,ny,nscalar) )
+      ELSE
         allocate( rsx(1,1,1,1),  &
-                 rsx1(1,1,1,1), &
-                 sx(1,1,1,1),   &
-                 sx1(1,1,1,1),  &
-                 fsx(1,1,1,1) )
-      endif
+                  rsx1(1,1,1,1), &
+                  sx(1,1,1,1),   &
+                  sx1(1,1,1,1),  &
+                  fsx(1,1,1,1) )
+      ENDIF
 
 !--------------
 !
-      include "initialize.inc.f90"
+      include "initialize.inc"
 !
 !--------------
+
+      dz3d(:,:,:) = dz
 
       Azero(1) = 0.0
 
@@ -259,6 +289,7 @@
 !*****Large time step calculations
 !
       kkk = ip
+
       do nit = 0, total_steps
 
       if(nit .ne. 0) then
@@ -269,7 +300,7 @@
       tinit =.05*xa
       if(npr.eq.1)  then
          write(6,*) 't,wmax= ',time, wmax(nit)
-         write(0,*) 't,wmax= ',time, wmax(nit)
+!        write(0,*) 't,wmax= ',time, wmax(nit)
          npr=0
       end if
 
@@ -414,12 +445,10 @@
 ! other scalars
          do n = 1,nscalar
            call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-     &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
+                       xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
          enddo
 
-         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz,  &
-     &                 nz1,nx,ny,iper,jper      )
+         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper      )
 
 !
 !--------------
@@ -935,7 +964,7 @@
 !            do k=1,nz1
 !              if(mod(i,2).eq.0.)  then
 !                 nyj=ny+1-j
-!c                nyj=nyc+1-j
+!                 nyj=nyc+1-j
 !                 if(nyj.lt.1)  nyj=nyj+ny1
 !                  vdiff=abs(u2(k,i,j)+u2(k,i,nyj))
 !              else
@@ -952,25 +981,32 @@
 !              end if
 !            end do
 !         end do
-!c         write(6,*) j,yu2(91,j),u2(1,91,j),yu2(92,j),u2(1,92,j)
+!         write(6,*) j,yu2(91,j),u2(1,91,j),yu2(92,j),u2(1,92,j)
 !      end do
 !     write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
 
       end if !  take step only after plotting first
-!
-!
-!**** processing for plotting
-!
-!--------------
-!
-      include "plotting.inc.f90"
-!
-!--------------
-!
-      end do  ! for timestep loop
 
-      call clsgks()
+!===============================================================================
+!
+! Code block for NCAR GRAPHICS - uncomment if you want to use this 
+!
+!     include plotting.inc
+!
+!-------------------------------------------------------------------------------
+!
+! Code block for netCDF output - uncomment if you want to use this 
+!
+      include "ncdf.inc"
+!
+!===============================================================================
+
+      END DO  ! MAIN TIME STEP LOOP
+
+!===============================================================================
+! Uncomment out for NCAR GRAPHICS
+!
+!     call clsgks()
 
       stop
       end
-     
