@@ -1,6 +1,6 @@
 !WRF:MODEL_LAYER:PHYSICS
 
-! prepocessed on "Mar  7 2025" at "14:01:06"
+! prepocessed on "Mar  7 2025" at "14:12:38"
 
 
 
@@ -1463,12 +1463,11 @@ MODULE module_mp_nssl_2mom
 
     ipconc = ipctmp
     
-    IF ( ipconc < 5 ) THEN
-       ihlcnh = 0
-    ENDIF
 
     IF ( ihlcnh <= 0 ) THEN
-      IF ( ipconc == 5 ) THEN
+      IF ( ipconc < 5 ) THEN
+        ihlcnh = 0
+      ELSEIF ( ipconc == 5 ) THEN
        ihlcnh = 3
       ELSEIF ( ipconc >= 6 ) THEN
        ihlcnh = 3
@@ -21014,7 +21013,7 @@ END SUBROUTINE nssl_2mom_driver
 !      qhlcnh(mgs) = 0.0
 !      chlcnh(mgs) = 0.0
       if ( wetgrowth(mgs) .and. temg(mgs) .lt. tfr-5. .and. qx(mgs,lh) > qxmin(lh) ) then
-      if ( qhacw(mgs).gt.1.e-6 .and. xdn(mgs,lh) > 700. ) then
+      if ( qhacw(mgs).gt.1.e-6 .and. ( xdn(mgs,lh) > 700. .or. lvh == 0 ) ) then
       qhlcnh(mgs) =                                                   &
         ((pi*xdn(mgs,lh)*cx(mgs,lh)) / (6.0*rho0(mgs)*dtp))           &
        *exp(-hldia1/xdia(mgs,lh,1))                                    &

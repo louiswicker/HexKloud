@@ -119,6 +119,7 @@
       integer :: li = 4, ls = 5, lh = 6, lhl = 7
       integer :: lnc = 1, lnr = 2, lni = 3, lns = 4, lnh = 5, lnhl = 6, lccn = 7
       integer :: lvh = 8, lvhl = 9
+      integer :: lzr = 0, lzh = 0, lzhl = 0
       real    :: tmp
       real, dimension(20) :: nssl_params
 
@@ -130,7 +131,7 @@
                  nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
                  nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
 
-      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
+      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1, nssl_3moment = 0
       integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
       integer           :: iadvord = 5 ! advection order
       character(len=6)  :: order
@@ -157,7 +158,7 @@
       integer           :: iunit
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
-                      dt, iwty, debug, runname, writenc, doplot
+                      dt, iwty, debug, runname, writenc, doplot, nssl_3moment
 
 ! Start here and read namelist
 
@@ -181,8 +182,14 @@
       elseif ( mp_physics == 18 ) then
         nmoist = 7
          if ( nssl_2moment_on == 1 ) then
-            i = 5
-            nscalar = 9
+            if ( nssl_3moment == 1 ) then
+              i = 8
+              nscalar = 9+3
+              lzr = 10; lzh = 11; lzhl = 12
+            else
+              i = 5
+              nscalar = 9
+            endif
          elseif ( nssl_2moment_on == 0 ) then
             i = 0
             nscalar = 0
@@ -245,11 +252,11 @@
                 fqx(nz1,nx,ny,nmoist) )
 
       if ( nscalar > 0 ) then
-        allocate( rsx(nz1,nx,ny,nscalar),  &
-                 rsx1(nz1,nx,ny,nscalar), &
-                 sx(nz1,nx,ny,nscalar),   &
-                 sx1(nz1,nx,ny,nscalar),  &
-                 fsx(nz1,nx,ny,nscalar) )
+        allocate( rsx(nz1,nx,ny,0:nscalar),  &
+                 rsx1(nz1,nx,ny,0:nscalar), &
+                 sx(nz1,nx,ny,0:nscalar),   &
+                 sx1(nz1,nx,ny,0:nscalar),  &
+                 fsx(nz1,nx,ny,0:nscalar) )
       else
         allocate( rsx(1,1,1,0:1),  &
                  rsx1(1,1,1,0:1), &
@@ -847,9 +854,9 @@
                      CHL=sx(1,1,1,lnhl),                  &
                      VHW=sx(1,1,1,lvh), f_vhw=(lvh > 1),  &
                      VHL=sx(1,1,1,lvhl), f_vhl=(lvhl > 1),&
-!                      ZRW=qzr_curr,  f_zrw = f_qzr,       &
-!                      ZHW=qzg_curr,  f_zhw = f_qzg,       &
-!                      ZHL=qzh_curr,  f_zhl = f_qzh,       &
+                     ZRW=sx(1,1,1,lzr),  f_zrw = (lzr > 1),       &
+                     ZHW=sx(1,1,1,lzh),  f_zhw = (lzh > 1),       &
+                     ZHL=sx(1,1,1,lzhl),  f_zhl = (lzhl > 1),       &
                      cn=sx(1,1,1,lccn),  f_cn=(lccn > 1), &
                      PII=pb,                              &
                      P=pres,                              &

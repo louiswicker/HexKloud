@@ -881,8 +881,8 @@
        varlabel(n+4)  = 'Qhl'
        n = n+4
      endif
-     
-     if ( nscalar == 9 ) then
+
+     if ( nscalar >= 9 ) then
        varlabel(n+1)  = 'ccw'
        varlabel(n+2)  = 'crw'
        varlabel(n+3)  = 'cci'
@@ -892,9 +892,16 @@
        varlabel(n+7)  = 'ccn'
        varlabel(n+8)  = 'vh '
        varlabel(n+9)  = 'vhl'
-       n = n+nscalar
+       n = n+9
      endif
-     
+
+     if ( nssl_3moment == 1 .and. mp_physics == 18 ) then
+       varlabel(n+1)  = 'zrw'
+       varlabel(n+2)  = 'zhw'
+       varlabel(n+3)  = 'zhl'
+       n = n+3
+     endif
+
        varlabel(n+1) = 'REF'
        n = n+1
 
