@@ -20,14 +20,29 @@
      &       ,nscratch,ip2,im2,jp2,jm2,ip3,jp3,ii,jj
       character*6 order
 
+! Local WENO
+
+      real eps0, gi0, gi1, gi2, sumwk
+      real qim2, qim1, qi, qip1, qip2
+      real f0, f1, f2
+
+      integer pw
+
+      eps0 = 1.0e-20
+      gi0  = 1./10.
+      gi1  = 6./10.
+      gi2  = 3./10.
+      pw   = 2
+
+
       nx1 = nx-1
       ny1 = ny-1
-      nz = nz1+1
+      nz  = nz1+1
       nz2 = nz1-1
 
       prandtl = 3.0
 !
-!        right hand side of s equation
+! Right hand side of s equation
 !
       do j=1,ny
          jp1 = j+1
@@ -149,8 +164,120 @@
      &                                -5.*(s(k,ip2,jp1)-s(k,im1,jpm))   &
      &                               +10.*(s(k,ip1,jpj)-s(k,i  ,j  )))
                   end do
+
                end if
+
+            else if( order .eq. 'weno5 ' )  then
+
+               do k=1,nz1
+
+                  flux1(k,i,j) = (1./60.)*ru1(k,i  ,j)  &
+                                    *(37.*(s(k,ip1,jpm)+s(k,i  ,j  ))  &
+                                      -8.*(s(k,ip2,jm1)+s(k,im1,jpj))   &
+                                         +(s(k,ip3,jmm)+s(k,im2,jp1)))
+
+                  flux1(k,i,j) =flux1(k,i,j)-(1./60.)*abs(ru1(k,i,j))  &
+                                        *((s(k,ip3,jmm)-s(k,im2,jp1))  &
+                                      -5.*(s(k,ip2,jm1)-s(k,im1,jpj))   &
+                                     +10.*(s(k,ip1,jpm)-s(k,i  ,j  )))
+
+!                 IF( ru1(k,i,j) .ge. 0.0 ) THEN
+!
+!                   qip2 = s(k,ip2,jm1)
+!                   qip1 = s(k,ip1,jpm)
+!                   qi   = s(k,i  ,j  )
+!                   qim1 = s(k,im1,jpj)
+!                   qim2 = s(k,im2,jp1)
+!
+!                 ELSE
+!
+!                   qim2 = s(k,ip3,jmm)
+!                   qim1 = s(k,ip2,jm1)
+!                   qi   = s(k,ip1,jpm)
+!                   qip1 = s(k,i  ,j  )
+!                   qip2 = s(k,im1,jpj)
+!
+!                 ENDIF
+!
+!                 f0 =  1./3.*qim2 - 7./6.*qim1 + 11./6.*qi
+!                 f1 = -1./6.*qim1 + 5./6.*qi   + 1./3. *qip1
+!                 f2 =  1./3.*qi   + 5./6.*qip1 - 1./6. *qip2
+!
+!                 flux1(k,i,j) = ru1(k,i,j) * (gi0*f0 + gi1*f1 + gi2*f2)
+
+                  flux2(k,i,j) = (1./60.)*ru2(k,i  ,j)  &
+                                    *(37.*(s(k,i  ,jp1)+s(k,i  ,j  ))  &
+                                      -8.*(s(k,i  ,jp2)+s(k,i  ,jm1))   &
+                                         +(s(k,i  ,jp3)+s(k,i  ,jm2)))
+
+                  flux2(k,i,j) =flux2(k,i,j)-(1./60.)*abs(ru2(k,i,j))  &
+                                        *((s(k,i  ,jp3)-s(k,i  ,jm2))  &
+                                      -5.*(s(k,i  ,jp2)-s(k,i  ,jm1))   &
+                                     +10.*(s(k,i  ,jp1)-s(k,i  ,j  )))
+
+!                 IF( ru2(k,i,j) .ge. 0.0 ) THEN
+!
+!                   qip2 = s(k,i,  jp2)
+!                   qip1 = s(k,i,  jp1)
+!                   qi   = s(k,i,  j  )
+!                   qim1 = s(k,i,  jm1)
+!                   qim2 = s(k,i,  jm2)
+!
+!                 ELSE
+!
+!                   qim2 = s(k,i,  jp3)
+!                   qim1 = s(k,i,  jp2)
+!                   qi   = s(k,i,  jp1)
+!                   qip1 = s(k,i,  j  )
+!                   qip2 = s(k,i,  jm1)
+!
+!                 ENDIF
+
+!                 f0 =  1./3.*qim2 - 7./6.*qim1 + 11./6.*qi
+!                 f1 = -1./6.*qim1 + 5./6.*qi   + 1./3. *qip1
+!                 f2 =  1./3.*qi   + 5./6.*qip1 - 1./6. *qip2
+
+!                 flux2(k,i,j) = ru2(k,i,j) * (gi0*f0 + gi1*f1 + gi2*f2)
+
+                  flux3(k,i,j) = (1./60.)*ru3(k,i  ,j)  &
+                                    *(37.*(s(k,ip1,jpj)+s(k,i,j))  &
+                                      -8.*(s(k,ip2,jp1)+s(k,im1,jpm))   &
+                                         +(s(k,ip3,jpp)+s(k,im2,jm1)))
+
+                  flux3(k,i,j) =flux3(k,i,j)-(1./60.)*abs(ru3(k,i,j))  &
+                                       *((s(k,ip3,jpp)-s(k,im2,jm1))  &
+                                     -5.*(s(k,ip2,jp1)-s(k,im1,jpm))   &
+                                    +10.*(s(k,ip1,jpj)-s(k,i  ,j  )))
+
+!                 IF( ru3(k,i,j) .ge. 0.0 ) THEN
+!
+!                   qip2 = s(k,ip2,jp1)
+!                   qip1 = s(k,ip1,jpj)
+!                   qi   = s(k,i,  j  )
+!                   qim1 = s(k,im1,jpm)
+!                   qim2 = s(k,im2,jm1)
+!
+!                 ELSE
+!
+!                   qim2 = s(k,ip3,jpp)
+!                   qim1 = s(k,ip2,jp1)
+!                   qi   = s(k,ip1,jpj)
+!                   qip1 = s(k,i,  j  )
+!                   qip2 = s(k,im1,jpm)
+!
+!                 ENDIF
+!
+!                 f0 =  1./3.*qim2 - 7./6.*qim1 + 11./6.*qi
+!                 f1 = -1./6.*qim1 + 5./6.*qi   + 1./3. *qip1
+!                 f2 =  1./3.*qi   + 5./6.*qip1 - 1./6. *qip2
+!
+!                 flux3(k,i,j) = ru3(k,i,j) * (gi0 * f0 + gi1*f1 + gi2*f2)
+
+
+               end do
+
             end if
+
          end do
       end do
 !
@@ -173,9 +300,9 @@
             end if
             do k=1,nz1
                fs(k,i,j) = - dtsa*(flux1(k,i,j)-flux1(k,im1,jpj)  &
-     &                           +flux2(k,i,j)-flux2(k,i  ,jm1)  &
-     &                           +flux3(k,i,j)-flux3(k,im1,jpm))  &
-     &                 - dts*rdz*(fluxz(k,i,j)-fluxz(k-1,i,  j))
+     &                            +flux2(k,i,j)-flux2(k,i  ,jm1)  &
+     &                            +flux3(k,i,j)-flux3(k,im1,jpm))  &
+     &                  - dts*rdz*(fluxz(k,i,j)-fluxz(k-1,i,  j))
             end do
          end do
       end do

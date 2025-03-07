@@ -246,11 +246,15 @@
         order = 'fifth '
       elseif ( iadvord == 6 ) then
         order = 'sixth '
+      elseif ( iadvord == 7 ) then
+        order = 'weno5 '
       else
         write(0,*) 'invalid value of iadvord: ',iadvord, 'resetting to 5'
         iadvord = 5
         order = 'fifth '
       endif
+
+      write(6,*) 'IADVORD:  ', iadvord, '  SCHEME: ', order
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
@@ -274,7 +278,7 @@
 
 !--------------
 !
-      include "initialize.inc"
+      include "initialize.inc.f90"
 !
 !--------------
 
@@ -991,13 +995,13 @@
 !
 ! Code block for NCAR GRAPHICS - uncomment if you want to use this 
 !
-!     include plotting.inc
+!     include plotting.inc.f90
 !
 !-------------------------------------------------------------------------------
 !
 ! Code block for netCDF output - uncomment if you want to use this 
 !
-      include "ncdf.inc"
+      include "ncdf.inc.f90"
 !
 !===============================================================================
 
