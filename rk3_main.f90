@@ -138,6 +138,7 @@
       real              :: delt  = 3.     ! bubble temp
       real              :: dt    = 6.0    ! time step
       logical           :: debug = .false.
+      logical           :: doplot = .true. ! flag for ncarg plotting
 
 ! Arrays for netCDF
 
@@ -156,7 +157,7 @@
       integer           :: iunit
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
-                      dt, iwty, debug, runname, writenc
+                      dt, iwty, debug, runname, writenc, doplot
 
 ! Start here and read namelist
 
@@ -427,11 +428,13 @@
 
 
 ! other scalars
+       if ( nscalar > 0 ) then
          do n = 1,nscalar
            call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
          enddo
+        endif
 
          call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz,  &
      &                 nz1,nx,ny,iper,jper      )
@@ -451,9 +454,11 @@
                   do n = 1,nmoist
                     rqx(k,i,j,n) = amax1(rqx1(k,i,j,n) + ns_rk*fqx(k,i,j,n),0.0)
                   enddo
+                  if ( nscalar > 0 ) then
                   do n = 1,nscalar
                     rsx(k,i,j,n) = amax1(rsx1(k,i,j,n) + ns_rk*fsx(k,i,j,n),0.0)
                   enddo
+                  endif
 !                   rqv(k,i,j) = amax1(rqv1(k,i,j) + ns_rk*fqv(k,i,j),0.0)
 !                   rqc(k,i,j) = amax1(rqc1(k,i,j) + ns_rk*fqc(k,i,j),0.0)
 !                   rqr(k,i,j) = amax1(rqr1(k,i,j) + ns_rk*fqr(k,i,j),0.0)

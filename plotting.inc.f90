@@ -17,7 +17,7 @@
             end do
          end do
          
-         if((kkk.ge.ip).or. (nit.eq.0)) then      
+        if((kkk.ge.ip).or. (nit.eq.0)) then      
 
      if ( mp_physics == 1 ) then ! set dbz for Kessler micro
        do j = 1,ny
@@ -72,6 +72,8 @@
         call wplot(wmax,waxis,wmplt,ip,nit+1,total_steps)
         write(6,*) 'i,j,k,wmax: ', IWMAX,JWMAX,KWMAX,WMAX(nit+1)
         
+         if ( doplot ) then
+
 !            go to 122
 
 !
@@ -327,7 +329,7 @@
                      end if
                   end do
                end do
-               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'dbz',plane,'p',  &
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'db',plane,'p',  &
      &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
@@ -536,7 +538,7 @@
                      plty(j,k)=dbz(k,i,jj)
                   end do
                end do
-               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'dbz',plane,'p',  &
+               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'db',plane,'p',  &
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
@@ -836,7 +838,7 @@
                      end if
                   end do
                end do
-               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'dbz',plane,'h ',  &
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'db',plane,'h ',  &
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
                
@@ -846,6 +848,7 @@
 
 !  124          continue
 
+        endif ! doplot
         end if
 
 !===============================================================================
@@ -879,7 +882,7 @@
        n = n+4
      endif
      
-     if ( nscalar > 1 ) then
+     if ( nscalar == 9 ) then
        varlabel(n+1)  = 'ccw'
        varlabel(n+2)  = 'crw'
        varlabel(n+3)  = 'cci'
@@ -965,7 +968,7 @@
               if(mod(ii,2).eq.0.)  then
                  jp1 =min(jj+1,ny)
                  if(jper*jj.eq.ny)  jp1 = 2
-                 ncdf_var(i,j,k,5) = 0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
+                 ncdf_var(i,j,k,5) = 1000.*0.5*(qx(k,ii,jj,lv) + qx(k,ii,jp1,lv) - 2.0*qvzv(k))
                  do n = 2,nmoist
                   ncdf_var(i,j,k,4+n) = 1000.0*0.5*(qx(k,ii,jj,n)+qx(k,ii,jp1,n))
                  enddo
@@ -973,9 +976,11 @@
 !                  ncdf_var(i,j,k,7) = 1000.0*0.5*(qx(k,ii,jj,lr)+qx(k,ii,jp1,lr))
 !                  ncdf_var(i,j,k,8) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,li))
 !                  ncdf_var(i,j,k,9) = 1000.0*0.5*(qx(k,ii,jj,li)+qx(k,ii,jp1,lh))
+                 if ( nscalar > 0 ) then
                  do n = 1,nscalar
                    ncdf_var(i,j,k,4+nmoist+n) = 0.5*(sx(k,ii,jj,n)+sx(k,ii,jp1,n))
                  enddo
+                 endif
                   ncdf_var(i,j,k,4+nmoist+nscalar+1)= 0.5*(dbz(k,ii,jj)+dbz(k,ii,jp1))
               else
                  ncdf_var(i,j,k,5) = 1000.0 * (qx(k,ii,jj,lv) - qvzv(k))
