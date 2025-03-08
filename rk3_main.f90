@@ -293,7 +293,7 @@
 
 !--------------
 !
-      include "initialize.inc"
+      include "initialize.inc.f90"
 !
 !--------------
 
@@ -1011,13 +1011,13 @@
 !
 ! Code block for NCAR GRAPHICS - uncomment if you want to use this 
 !
-!     include plotting.inc
+!     include "plotting.inc.f90"
 !
 !-------------------------------------------------------------------------------
 !
 ! Code block for netCDF output - uncomment if you want to use this 
 !
-      include "ncdf.inc"
+      include "ncdf.inc.f90"
 !
 !===============================================================================
 
