@@ -1,5 +1,5 @@
 # Compiled Object files
 *.o
-
+*.nc
 rk3_moist
 gmeta*

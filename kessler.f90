@@ -4,7 +4,9 @@
       subroutine kessler_joe( t1t, qv1t, qc1, qr1,  &
      &                        rho, pii, dt, dz, nz1, ny, nx         )
 
+      implicit none
       integer nx, ny, nz1
+      real dt, dz
       real t1t (nz1,nx,ny), qv1t(nz1,nx,ny),    &
      &     qc1 (nz1,nx,ny), qr1 (nz1,nx,ny),  &
      &     rho (nz1,nx,ny), pii (nz1,nx,ny)
@@ -16,9 +18,10 @@
      &    ,pk    (mz), pc   (mz), f0   (mz), qvs   (mz)
 !-----------------------------------------------------------------------
       real c1, c2, c3, c4, f5, mxfall, dtfall, fudge
-      real cp, rdz, product
+      real cp, rdz, product, ackess, artemp, artot, ckess, dtl, dtlc
+      real f2x, fvel, psl, veld, velu, xk, xki
       integer nfall
-      integer  i,j,k,n
+      integer  i,j,k,n,nz2
 
       ackess = 0.001
       ckess  = 2.2
@@ -65,7 +68,7 @@
             qr1(NZ1,i,j)  = qr1(NZ1,i,j)-DTL*FVEL*VELQR(NZ2)  &
      &                                 /(R(NZ1)*DZ*(1.+1.))
             ARTEMP     = 36340.*(.5*(VELQR(2)+VELQR(1))+VELD-VELU)
-            ARTOT      = ARTOT+DTD*ARTEMP
+           ! ARTOT      = ARTOT+DTD*ARTEMP ! dtd is not defined, but artot is not used
             DO K=1,NZ1
                qc1(K,i,j) = AMAX1(qc1(K,i,j)-QRPROD(K),0.)
                qr1(K,i,j) = AMAX1(qr1(K,i,j)+QRPROD(K),0.)
