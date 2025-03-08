@@ -15,7 +15,9 @@
 
       PROGRAM HEXKLOUD   ! In honor of Joe Klemp
 
-      USE module_mp_nssl_2mom
+      USE module_mp_nssl_2mom, only: nssl_2mom_driver, nssl_2mom_init
+      use rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, &
+          yh,yu1,yu2,yu3
 
       implicit none
 
@@ -30,39 +32,18 @@
 !     parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 !     parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 
-      real u1  (nz1,0:nx,ny), u11 (nz1,0:nx,ny), ru1 (nz1,0:nx,ny)  &
-     &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
-     &    ,ru1i(nz1,0:nx,ny), gu1 (nz1,0:nx,ny), du1 (nz1,0:nx,ny)  &
-     &    ,u3  (nz1,0:nx,ny), u31 (nz1,0:nx,ny), ru3 (nz1,0:nx,ny)  &
-     &    ,ru31(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)  &
-     &    ,ru3i(nz1,0:nx,ny), gu3 (nz1,0:nx,ny), du3 (nz1,0:nx,ny)  &
-     &    ,u2  (nz1,nx,0:ny), u21 (nz1,nx,0:ny), ru2 (nz1,nx,0:ny)  &
-     &    ,ru21(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)  &
-     &    ,ru2i(nz1,nx,0:ny), gu2 (nz1,nx,0:ny), du2 (nz1,nx,0:ny)  &
-     &    ,w   (nz ,nx,  ny), w1  (nz ,nx  ,ny), rw  (nz ,nx  ,ny)  &
-     &    ,rw1 (nz ,nx  ,ny), fw  (nz1,nx  ,ny)  &
-     &    ,t   (nz1,nx  ,ny), t1  (nz1,nx  ,ny), rt  (nz1,nx  ,ny)  &
-     &    ,rt1 (nz1,nx  ,ny), ft  (nz1,nx  ,ny)  &
-     &    ,ti  (nz1,nx  ,ny), rti (nz1,nx  ,ny), rtb (nz1,nx  ,ny)  &
-     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny)  &
-     &    ,rri (nz1,nx  ,ny), rb  (nz1,nx  ,ny), fr  (nz1,nx  ,ny)  &
-     &    ,p   (nz1,nx  ,ny), pb  (nz1,nx  ,ny), pii (nz1,nx  ,ny)  &
-     &    ,ww  (nz ,nx  ,ny), rho (nz1,nx  ,ny), tb  (nz1,nx  ,ny)  &
-     &    ,rs  (nz1,nx  ,ny), ts  (nz1,nx  ,ny), div (nz1,nx  ,ny)  &
-     &    ,a   (nz1,nx  ,ny), b   (nz1,nx  ,ny), c   (nz1,nx  ,ny)  &
-     &    ,cofwz (nz1,nx,ny), coftz (nz ,nx,ny), cofwt (nz1,nx,ny)  &
-     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny)                     &
-     &    ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny)  &
-     &    ,cofwrr(nz1,nx,ny), cofwr     (nx,ny), dhh1      (nx,ny)  &
-     &    ,dhh2      (nx,ny), dhh3      (nx,ny), hh        (nx,ny)  &
-     &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
-     &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
-     &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
+      real,allocatable,dimension(:,:,:) :: &
+        u1,u11,ru1,ru11,fu1,ru1i,gu1,du1,u3,u31,ru3,ru31,fu3, &
+        ru3i,gu3,du3,u2,u21,ru2,ru21,fu2,ru2i,gu2,du2,w,w1,rw, &
+        rw1,fw,t,t1,rt,rt1,ft,ti,rti,rtb,rr,rr1,rri,rb,fr,p,pb, &
+        pii,ww,rho,tb,rs,ts,div,a,b,c,cofwz,coftz,cofwt,alpha,gamma, &
+        flux1,flux2,flux3,cofwrr,fluxz
+      real,allocatable,dimension(:,:) :: cofwr,dhh1,dhh2,dhh3,hh,hs
+      real,allocatable,dimension(:) :: wdtz,zu,zw,ds,u1z,u2z,u3z,tz,ax,tzv,rqvb,rel_hum,qvzv
 
-      real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
-     &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
-     &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)  &
-     &    ,t_d_tend (nz1,nx  ,ny)
+      real, allocatable, dimension(:,:,:) :: ru1_save, ru3_save, ru2_save, &
+         rw_save, rt_save, rr_save, t_d_tend
+
 
 ! rqx,rqx1 are mass content (qx*rho)
 ! qx, qx1 are mass mixing ratio
@@ -76,16 +57,14 @@
 
       integer :: nmoist, nscalar
 
-      real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
-     &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
-     &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
-     &      ,x(nx),y(ny),time,pxl,pxr,pyl,pyr,pzl,zptop,xpll,xplr  &
+      real, allocatable, dimension(:,:) :: plt,pltx,plty
+      real, allocatable, dimension(:) :: hxpl,x,y
+      
+      real*4 time,pxl,pxr,pyl,pyr,pzl,zptop,xpll,xplr  &
      &      ,ypll,yplr,zplb,zplt,dxp,dyp,dzp,wmax(2401),waxis(2401)  &
      &      ,wmplt
 
       real*4 Azero(1)
-
-      common /grid/ xh, xu1, xu2, xu3, yh, yu1, yu2, yu3
 
       integer imass, rk_step, ns_rk, total_steps
       character*3 slice(2)
@@ -291,7 +270,48 @@
                   sx1(1,1,1,0:1),  &
                   fsx(1,1,1,0:1) )
       ENDIF
+      
+      nxcpy = nx
+      nycpy = ny
 
+      allocate( u1(nz1,0:nx,ny), u11(nz1,0:nx,ny),ru1(nz1,0:nx,ny)  &
+     &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)                     &
+     &    ,ru1i(nz1,0:nx,ny), gu1 (nz1,0:nx,ny), du1 (nz1,0:nx,ny)  &
+     &    ,u3  (nz1,0:nx,ny), u31 (nz1,0:nx,ny), ru3 (nz1,0:nx,ny)  &
+     &    ,ru31(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)                     &
+     &    ,ru3i(nz1,0:nx,ny), gu3 (nz1,0:nx,ny), du3 (nz1,0:nx,ny)  &
+     &    ,u2  (nz1,nx,0:ny), u21 (nz1,nx,0:ny), ru2 (nz1,nx,0:ny)  &
+     &    ,ru21(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)                     &
+     &    ,ru2i(nz1,nx,0:ny), gu2 (nz1,nx,0:ny), du2 (nz1,nx,0:ny)  &
+     &    ,w   (nz ,nx,  ny), w1  (nz ,nx  ,ny), rw  (nz ,nx  ,ny)  &
+     &    ,rw1 (nz ,nx  ,ny), fw  (nz1,nx  ,ny)                     &
+     &    ,t   (nz1,nx  ,ny), t1  (nz1,nx  ,ny), rt  (nz1,nx  ,ny)  &
+     &    ,rt1 (nz1,nx  ,ny), ft  (nz1,nx  ,ny)                     &
+     &    ,ti  (nz1,nx  ,ny), rti (nz1,nx  ,ny), rtb (nz1,nx  ,ny)  &
+     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny)                     &
+     &    ,rri (nz1,nx  ,ny), rb  (nz1,nx  ,ny), fr  (nz1,nx  ,ny)  &
+     &    ,p   (nz1,nx  ,ny), pb  (nz1,nx  ,ny), pii (nz1,nx  ,ny)  &
+     &    ,ww  (nz ,nx  ,ny), rho (nz1,nx  ,ny), tb  (nz1,nx  ,ny)  &
+     &    ,rs  (nz1,nx  ,ny), ts  (nz1,nx  ,ny), div (nz1,nx  ,ny)  &
+     &    ,a   (nz1,nx  ,ny), b   (nz1,nx  ,ny), c   (nz1,nx  ,ny)  &
+     &    ,cofwz (nz1,nx,ny), coftz (nz ,nx,ny), cofwt (nz1,nx,ny)  &
+     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny)                     &
+     &    ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny) &
+     &    ,cofwrr(nz1,nx,ny), cofwr     (nx,ny), dhh1      (nx,ny)  &
+     &    ,dhh2      (nx,ny), dhh3      (nx,ny), hh        (nx,ny)  &
+     &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
+     &    ,u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny) &
+     &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1) )
+
+       allocate( ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
+     &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)        &
+     &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)        &
+     &    ,t_d_tend (nz1,nx  ,ny) )
+
+       allocate( plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
+     &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)      &
+     &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)      &
+     &      ,x(nx),y(ny) )
 
 !--------------
 !
@@ -846,7 +866,7 @@
       do j=1,ny
          do i=1,nx
             do k=1,nz1
-              pres(k,i,j) = 1.e5*p(k,i,j)**(1./.2875)
+              pres(k,i,j) = 1.e5*p(k,i,j)**(1./.2875) ! from kessler code
               if ( debug .and. i == iwmax .and. j == jwmax ) then
                if ( nscalar > 1 ) then
                 write(6,*) k,pres(k,i,j),ws(k,i,j),qx(k,i,j,lc)*1000., sx(k,i,j,lnc), &
@@ -880,11 +900,11 @@
                      CHW=sx(1,1,1,lnh),                   &
                      CHL=sx(1,1,1,lnhl),                  &
                      VHW=sx(1,1,1,lvh), f_vhw=(lvh > 1),  &
-                     VHL=sx(1,1,1,lvhl), f_vhl=(lvhl > 1),&
-                     ZRW=sx(1,1,1,lzr),  f_zrw = (lzr > 1),       &
-                     ZHW=sx(1,1,1,lzh),  f_zhw = (lzh > 1),       &
-                     ZHL=sx(1,1,1,lzhl),  f_zhl = (lzhl > 1),       &
-                     cn=sx(1,1,1,lccn),  f_cn=(lccn > 1), &
+                     VHL=sx(1,1,1,lvhl),f_vhl=(lvhl > 1), &
+                     ZRW=sx(1,1,1,lzr), f_zrw=(lzr > 1),  &
+                     ZHW=sx(1,1,1,lzh), f_zhw=(lzh > 1),  &
+                     ZHL=sx(1,1,1,lzhl),f_zhl=(lzhl > 1), &
+                     cn=sx(1,1,1,lccn), f_cn=(lccn > 1),  &
                      PII=pb,                              &
                      P=pres,                              &
                      W=ws,                                &
@@ -901,7 +921,7 @@
 !                      GRPLNC   = GRAUPELNC,               &
 !                      GRPLNCV  = GRAUPELNCV,              &
 !                      SR=SR,                              &
-                     dbz      = dbz      ,                &
+                     dbz      = dbz,                      &
 !                     ssat3d   = ssat,  f_ssat=f_ssat,    &
 !                     ssati    = ssati, f_ssati=f_ssati,  &
                      nssl_progn=.false.,                  &

@@ -1,6 +1,8 @@
 #
 FC     = gfortran
-FFLAGS = -O2
+FFLAGS = -O2 -fopenmp
+#FFLAGS = -O0 -g -fcheck=all -fopenmp
+#FFLAGS = -O2
 
 OUTPUTINC = ${NETCDF_INC}
 LINKOPTS  = ${NETCDF_LIB}
@@ -9,7 +11,7 @@ OUTPUT_CODE = ncdf.inc.f90
 
 #.SUFFIXES: .f90 .F90
 
-OBJS = module_mp_nssl_2mom.o ncdf_utils.o           \
+OBJS = module_mp_nssl_2mom.o rk3_modules.o ncdf_utils.o  \
        rk3_main.o rk3_init.o rk3_rhss.o rk3_rhsu1.o \
        rk3_rhsu2.o rk3_rhsu3.o                      \
        rk3_rhsw.o rk3_smlstep.o rk3_coefs.o kessler.o 
