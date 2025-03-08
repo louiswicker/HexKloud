@@ -184,7 +184,7 @@
 
         
         ELSEIF ( ncuopt == 2 ) THEN ! version 2 for U
-        ! copied from x-y ncarge U plot
+        ! copied from x-y ncarge U plot. I think this is averaging to each hex center
         do j=1,nypl
 
                   jp1 = min(j+1,ny)
@@ -262,13 +262,13 @@
 
               if(iper*i.eq.1) iim1 = nx1
 
+                 jp1 =min(jj+1,ny)
+                 if(jper*jj.eq.ny)  jp1 = 2
               IF( mod(ii,2) == 0) THEN
 
-                        jp1 =min(jj+1,ny)
-                        if(jper*jj.eq.ny)  jp1 = 2
 
-                ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii,jj)+u1(k,iim1,jj)    &
-                                                   +u3(k,ii,jp1)+u3(k,iim1,jj)  &
+                ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii,jp1)+u1(k,iim1,jj)    &
+                                                   +u3(k,ii,jj)+u3(k,iim1,jj)  &
                                                -2.*(u1z(k)+u1m+u3z(k)+u3m))
 
 !               ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii,jj)+u1(k,ii-1,jj)  &
@@ -277,7 +277,7 @@
 
               ELSE
 
-                ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,iim1,jj)+u1(k,ii,jj)  &
+                ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,iim1,jp1)+u1(k,ii,jj)  &
                                                    +u3(k,ii,  jj)+u3(k,iim1,jj)  &
                                                -2.*(u1z(k)+u1m+u3z(k)+u3m))
 

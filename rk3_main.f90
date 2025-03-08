@@ -158,7 +158,8 @@
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
       integer           :: iunit
-      integer           :: ncuopt = 3
+      integer           :: ncuopt = 3 ! option for putting U on square grid
+                                      ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
                       dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
