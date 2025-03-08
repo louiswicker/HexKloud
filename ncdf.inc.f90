@@ -61,7 +61,11 @@
 
 ! for KESSLER or NSSL-2M runs, these variables will always be outputted
 
+      if ( ncupert == 1 ) then
+      varlabel(1)  = 'UP '
+      else
       varlabel(1)  = 'U  '
+      endif
       varlabel(2)  = 'V  '
       varlabel(3)  = 'W  '
       varlabel(4)  = 'THP'
@@ -185,6 +189,11 @@
         
         ELSEIF ( ncuopt == 2 ) THEN ! version 2 for U
         ! copied from x-y ncarge U plot. I think this is averaging to each hex center
+         if ( ncupert == 1 ) then
+           tmp = u1z(k)+u1m+u3z(k)+u3m
+         else
+           tmp = 0
+         endif
         do j=1,nypl
 
                   jp1 = min(j+1,ny)
@@ -210,7 +219,7 @@
 				     ncdf_var(i,j,k,1) = ampl*.5/sqrt(3.)            &
                                          *(u1(k,i,j)+u1(k,im1,jpj)  &
                                           +u3(k,i,j)+u3(k,im1,jpm)  &
-                                       -2.*(u1z(k)+u1m+u3z(k)+u3m))
+                                       -2.*tmp)
 
 !              ii = i+ipi-1
 !
@@ -244,6 +253,12 @@
 
         ELSEIF ( ncuopt == 3 ) THEN ! version 3 for U
 
+         if ( ncupert == 1 ) then
+           tmp = u1z(k)+u1m+u3z(k)+u3m
+         else
+           tmp = 0
+         endif
+
         do j=1,nypl
 
 !                  jp1 = min(j+1,ny)
@@ -269,7 +284,7 @@
 
                 ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii,jp1)+u1(k,iim1,jj)    &
                                                    +u3(k,ii,jj)+u3(k,iim1,jj)  &
-                                               -2.*(u1z(k)+u1m+u3z(k)+u3m))
+                                               -2.*tmp)
 
 !               ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii,jj)+u1(k,ii-1,jj)  &
 !                                                  +u3(k,ii,jj)+u3(k,ii-1,jj)  &
@@ -279,7 +294,7 @@
 
                 ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,iim1,jp1)+u1(k,ii,jj)  &
                                                    +u3(k,ii,  jj)+u3(k,iim1,jj)  &
-                                               -2.*(u1z(k)+u1m+u3z(k)+u3m))
+                                               -2.*tmp)
 
 !!               ncdf_var(i,j,k,1) = 0.5/sqrt(3.) * (u1(k,ii-1,jj+1)+u1(k,ii,jj+1)  &
 !!                                                  +u3(k,ii-1,jj)+u3(k,ii,jj+1)  &

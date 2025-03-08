@@ -158,12 +158,13 @@
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
       integer           :: iunit
+      integer           :: ncupert = 1 ! 0=U output as full value; 1=U output as u-pert
       integer           :: ncuopt = 3 ! option for putting U on square grid
                                       ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
                       dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
-                      ncuopt
+                      ncuopt,ncupert
 
 ! Start here and read namelist
 
