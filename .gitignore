@@ -1,5 +1,13 @@
 # Compiled Object files
 *.o
+<<<<<<< HEAD
 *.nc
 rk3_moist
+=======
+
+rk3_ncdf
+rk3_ncar
+*.nc
+*.mod
+>>>>>>> weno
 gmeta*

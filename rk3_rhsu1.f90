@@ -3,7 +3,7 @@
       subroutine rhs_u1( u1,u11,ru1,fu1,ww,rho,ru2,ru3,u1z,u2z,u3z,  &
      &                   u1m,u2m,u3m,ds,dtsa,dtsd,dtsf,dts,c1f,  &
      &                   c2f,rdz,xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &                   flux1,flux2,flux3,fluxz,order)
+     &                   flux1,flux2,flux3,fluxz,h_adv,v_adv)
 
       implicit none
 
@@ -18,7 +18,7 @@
       integer nx1,i,ip1,im1,ip2,im2,ip3  &
      &       ,ny1,j,jp1,jm1,jp2,jm2,jp3,jpj,jpm,jpp,jmm  &
      &       ,nz2,k,nz
-      character*6 order
+      integer h_adv, v_adv
 
       nx1 = nx-1
       ny1 = ny-1
@@ -70,7 +70,7 @@
             fluxz(nz2,i,j) = 0.25*(ww(nz1,i,j)+ww(nz1,ip1,jpm))  &
      &                           *(u1(nz1,i,j)+u1(nz2,i  ,j  ))
 
-            if (order.eq.'second'.or.order.eq.'fourth') then
+            if ( v_adv == 2 .or. v_adv == 4 ) then
 
                do k=2,nz1-2  
                   fluxz(k,i,j) = .25*(ww(k+1,i,j)+ww(k+1,ip1,jpm))  &
@@ -93,7 +93,7 @@
 !
 !  horizontal flux calculations
 !
-            if(order.eq.'second')  then
+            if( h_adv == 2 ) then
                do k=1,nz1
                   flux1(k,i,j) = .25*(ru1(k,i,j)+ru1(k,ip1,jpm))  &
      &                              *(u1 (k,i,j)+u1 (k,ip1,jpm))
@@ -102,7 +102,7 @@
                   flux3(k,i,j) = .25*(ru3(k,i,j)+ru3(k,ip1,jpm))  &
      &                              *(u1 (k,i,j)+u1 (k,ip1,jpj))
                end do
-            else if(order.eq.'third '.or.order.eq.'fourth')  then
+            else if( h_adv == 3 .or. h_adv == 4 ) then
                do k=1,nz1
                   flux1(k,i,j) =  1./12.*  &
      &                               .5*(ru1(k,i  ,j  )+ru1(k,ip1,jpm))  &
@@ -117,7 +117,7 @@
      &                               *(7.*(u1(k,ip1,jpj)+u1(k,i  ,j  ))  &
      &                                   -(u1(k,ip2,jp1)+u1(k,im1,jpm)))
                end do
-               if(order.eq.'third ')  then
+               if( h_adv == 3 ) then
                   do k=1,nz1
                      flux1(k,i,j) =  flux1(k,i,j)+1./12.*  &
      &                           abs(.5*(ru1(k,i,j)+ru1(k,ip1,jpm)))  &
@@ -133,7 +133,7 @@
      &                                 +(u1 (k,ip2,jp1)-u1 (k,im1,jpm))) 
                   end do
                end if
-            else if(order.eq.'fifth '.or.order.eq.'sixth ')  then
+            else if( h_adv == 5 .or. h_adv == 6 ) then
                do k=1,nz1
                   flux1(k,i,j) = (1./60.)*  &
      &                              .5*(ru1(k,i  ,j  )+ru1(k,ip1,jpm))  &
@@ -151,7 +151,7 @@
      &                             -8.*(u1 (k,ip2,jp1)+u1 (k,im1,jpm))   &
      &                                +(u1 (k,ip3,jpp)+u1 (k,im2,jm1)))
                end do
-               if(order.eq.'fifth ')  then
+               if( h_adv == 5 ) then
                   do k=1,nz1
                      flux1(k,i,j) =flux1(k,i,j)-(1./60.)*  &
      &                          abs(.5*(ru1(k,i,j)+ru1(k,ip1,jpm)))  &

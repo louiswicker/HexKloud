@@ -3,7 +3,10 @@
 !                                                                     72
       subroutine rhs_s( s,s1,fs,ww,ru1,ru2,ru3,rho,dmp,dts,dtsa,  &
      &           rdz,xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &           s0,n1,n2,n3,flux1,flux2,flux3,fluxz,order)
+     &           s0,n1,n2,n3,flux1,flux2,flux3,fluxz,h_adv,v_adv)
+
+
+      use weno
 
       implicit none
 
@@ -18,7 +21,11 @@
 
       integer nx1,ny1,nz,i,j,k,ip1,im1,jp1,jm1,nz2,jpj,jpp,jpm,jmm  &
      &       ,nscratch,ip2,im2,jp2,jm2,ip3,jp3,ii,jj
-      character*6 order
+      integer h_adv, v_adv
+
+!-WENO VARS
+
+      real qim2, qim1, qi, qip1, qip2
 
 ! Local WENO
 
@@ -41,9 +48,15 @@
       nz2 = nz1-1
 
       prandtl = 3.0
+<<<<<<< HEAD
+
+! Right hand side of s equation
+
+=======
 !
 ! Right hand side of s equation
 !
+>>>>>>> main
       do j=1,ny
          jp1 = j+1
          if(jper*j.eq.ny  )  jp1 = 2
@@ -85,7 +98,7 @@
             fluxz(1  ,i,j) = 0.5*ww(2  ,i,j)*(s(2  ,i,j)+s(1  ,i,j))
             fluxz(nz2,i,j) = 0.5*ww(nz1,i,j)*(s(nz1,i,j)+s(nz2,i,j))
 
-            if (order.eq.'second'.or.order.eq.'fourth') then
+            if ( v_adv == 2 .or. v_adv == 4 ) then
 
                do k=2,nz1-2  
                   fluxz(k,i,j) = .5*ww(k+1,i,j)*(s(k+1,i,j)+s(k,i,j))
@@ -96,20 +109,18 @@
      &                7.*(s(k+1,i,j)+s(k,i,j))-(s(k+2,i,j)+s(k-1,i,j)))  &
      &                                +abs(ww(k+1,i,j))*(  &
      &               -3.*(s(k+1,i,j)-s(k,i,j))+(s(k+2,i,j)-s(k-1,i,j))))
-
-!cc               fluxz(k,i,j) = .5*ww(k+1,i,j)*(s(k+1,i,j)+s(k,i,j))
                end do
             end if
 !
 !  horizontal flux calculations
 !
-            if(order.eq.'second')  then
+            if( h_adv == 2 ) then
                do k=1,nz1
                   flux1(k,i,j) = .5*ru1(k,i,j)*(s(k,i,j)+s(k,ip1,jpm))
                   flux2(k,i,j) = .5*ru2(k,i,j)*(s(k,i,j)+s(k,i  ,jp1))
                   flux3(k,i,j) = .5*ru3(k,i,j)*(s(k,i,j)+s(k,ip1,jpj))
                end do
-            else if(order.eq.'third '.or.order.eq.'fourth')  then
+            else if( h_adv == 3 .or. h_adv == 4 ) then
                do k=1,nz1
                   flux1(k,i,j) =  1./12.*ru1(k,i  ,j  )  &
      &                                *(7.*(s(k,ip1,jpm)+s(k,i  ,j  ))  &
@@ -121,7 +132,7 @@
      &                                *(7.*(s(k,ip1,jpj)+s(k,i  ,j  ))  &
      &                                    -(s(k,ip2,jp1)+s(k,im1,jpm)))
                end do
-               if(order.eq.'third ')  then
+               if( h_adv == 3 ) then
                   do k=1,nz1
                      flux1(k,i,j) =  flux1(k,i,j)+1./12.*abs(ru1(k,i,j))  &
      &                               *(-3.*(s(k,ip1,jpm)-s(k,i  ,j  ))  &
@@ -134,7 +145,7 @@
      &                                    +(s(k,ip2,jp1)-s(k,im1,jpm))) 
                   end do
                end if
-            else if(order.eq.'fifth '.or.order.eq.'sixth ')  then
+               else if( h_adv == 5 .or. h_adv == 6 ) then
                do k=1,nz1
                   flux1(k,i,j) = (1./60.)*ru1(k,i  ,j)  &
      &                              *(37.*(s(k,ip1,jpm)+s(k,i  ,j  ))  &
@@ -149,7 +160,7 @@
      &                                -8.*(s(k,ip2,jp1)+s(k,im1,jpm))   &
      &                                   +(s(k,ip3,jpp)+s(k,im2,jm1)))
                end do
-               if(order.eq.'fifth ')  then
+               if( h_adv ==5 ) then
                   do k=1,nz1
                      flux1(k,i,j) =flux1(k,i,j)-(1./60.)*abs(ru1(k,i,j))  &
      &                                  *((s(k,ip3,jmm)-s(k,im2,jp1))  &
@@ -167,6 +178,71 @@
 
                end if
 
+<<<<<<< HEAD
+            else if( h_adv == 55 ) then  ! WENO-5
+
+               do k=1,nz1
+
+                  IF( ru1(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip2 = s(k,ip2,jm1)
+                    qip1 = s(k,ip1,jpm)
+                    qi   = s(k,i  ,j  )
+                    qim1 = s(k,im1,jpj)
+                    qim2 = s(k,im2,jp1)
+ 
+                  ELSE
+ 
+                    qim2 = s(k,ip3,jmm)
+                    qim1 = s(k,ip2,jm1)
+                    qi   = s(k,ip1,jpm)
+                    qip1 = s(k,i  ,j  )
+                    qip2 = s(k,im1,jpj)
+ 
+                  ENDIF
+ 
+                  flux1(k,i,j) = ru1(k,i,j) * weno5(qim2,qim1,qi,qip1,qip2)
+
+                  IF( ru2(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip2 = s(k,i,  jp2)
+                    qip1 = s(k,i,  jp1)
+                    qi   = s(k,i,  j  )
+                    qim1 = s(k,i,  jm1)
+                    qim2 = s(k,i,  jm2)
+ 
+                  ELSE
+ 
+                    qim2 = s(k,i,  jp3)
+                    qim1 = s(k,i,  jp2)
+                    qi   = s(k,i,  jp1)
+                    qip1 = s(k,i,  j  )
+                    qip2 = s(k,i,  jm1)
+ 
+                  ENDIF
+ 
+                  flux2(k,i,j) = ru2(k,i,j) * weno5(qim2,qim1,qi,qip1,qip2)
+ 
+                  IF( ru3(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip2 = s(k,ip2,jp1)
+                    qip1 = s(k,ip1,jpj)
+                    qi   = s(k,i,  j  )
+                    qim1 = s(k,im1,jpm)
+                    qim2 = s(k,im2,jm1)
+ 
+                  ELSE
+ 
+                    qim2 = s(k,ip3,jpp)
+                    qim1 = s(k,ip2,jp1)
+                    qi   = s(k,ip1,jpj)
+                    qip1 = s(k,i,  j  )
+                    qip2 = s(k,im1,jpm)
+ 
+                  ENDIF
+ 
+                  flux3(k,i,j) = ru3(k,i,j) * weno5(qim2,qim1,qi,qip1,qip2)
+=======
             else if( order .eq. 'weno5 ' )  then
 
                do k=1,nz1
@@ -273,6 +349,7 @@
 !
 !                 flux3(k,i,j) = ru3(k,i,j) * (gi0 * f0 + gi1*f1 + gi2*f2)
 
+>>>>>>> main
 
                end do
 

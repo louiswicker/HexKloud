@@ -136,6 +136,7 @@
 
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
+<<<<<<< HEAD
       integer           :: iunit
       integer           :: ncupert = 1 ! 0=U output as full value; 1=U output as u-pert
       integer           :: ncuopt = 3 ! option for putting U on square grid
@@ -144,6 +145,14 @@
       namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
                       dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
                       ncuopt,ncupert
+=======
+      integer           :: iunit, h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
+
+      integer           :: hh_sca_adv
+
+      namelist /main/ debug, mp_physics, nssl_2moment_on, nssl_cccn, delt, dt, iwty, & 
+                      h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
+>>>>>>> weno
 
 ! Start here and read namelist
 
@@ -233,6 +242,10 @@
 
       ENDIF
 
+<<<<<<< HEAD
+      write(6,*) 'H_MOM_ADV:  ', h_mom_adv, '  V_MOM_ADV: ', v_mom_adv
+      write(6,*) 'H_SCA_ADV:  ', h_sca_adv, '  V_SCA_ADV: ', v_sca_adv
+=======
 ! Set up advection scheme
       
       if ( iadvord == 2 ) then
@@ -254,6 +267,7 @@
       endif
 
       write(6,*) 'IADVORD:  ', iadvord, '  SCHEME: ', order
+>>>>>>> main
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
@@ -379,6 +393,7 @@
 !*****Beginning of Runge Kutta time steps
 !
       do rk_step = 1,3
+
 !**********
 !      do rk_step = 3,3
 
@@ -446,56 +461,62 @@
 
          call rhs_u1(u1,u11,ru1,fu1,ww,rho,ru2,ru3,u1z,u2z,u3z,u1m,u2m,  &
      &             u3m,ds,dtsa,dtsd,dtsf,dts,c1f,c2f,rdz,xnus,xnusz,  &
-     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,order)
+     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,h_mom_adv,v_mom_adv)
 
          call rhs_u3(u3,u31,ru3,fu3,ww,rho,ru1,ru2,u1z,u2z,u3z,u1m,u2m,  &
      &             u3m,ds,dtsa,dtsd,dtsf,dts,c1f,c2f,rdz,xnus,xnusz,  &
-     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,order)
+     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,h_mom_adv,v_mom_adv)
 
          call rhs_u2(u2,u21,ru2,fu2,ww,rho,ru1,ru3,u1z,u2z,u3z,u1m,u2m,  &
      &             u3m,ds,dtsa,dtsd,dtsf,dts,c1f,c2f,rdz,xnus,xnusz,  &
-     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,order)
+     &             nz1,nx,ny,iper,jper,flux1,flux2,flux3,fluxz,h_mom_adv,v_mom_adv)
 
-!         call rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,rcv,rb,rqv,  &
-!     &               rqc,rqr,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
-!     &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,order)
          call rhs_w( w,w1,fw,ww,p,pb,rt,rtb,rho,ru1,ru2,ru3,rcv,rb,rqx,  &
      &               nmoist,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
-     &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,order)
+     &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,h_mom_adv,v_mom_adv)
+
+         IF( rk_step < 3 ) THEN   ! ONLY DO WENO ON LAST STEP for scalars
+
+           IF( h_sca_adv == 33 ) hh_sca_adv = 3
+           IF( h_sca_adv == 55 ) hh_sca_adv = 5
+
+         ELSE
+
+           hh_sca_adv = h_sca_adv
+
+         ENDIF
 
          call rhs_s( t ,t1 ,ft ,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &               ti,nz1,nx,ny,flux1,flux2,flux3,fluxz,order)
+     &               ti,nz1,nx,ny,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
 
 ! qv
+
          call rhs_s( qx(1,1,1,lv),qx1(1,1,1,lv),fqx(1,1,1,lv),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &               qvzv,nz1,1,1,flux1,flux2,flux3,fluxz,order)
+     &               qvzv,nz1,1,1,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
 
 ! other mixing ratios
          do n = 2,nmoist
            call rhs_s( qx(1,1,1,n),qx1(1,1,1,n),fqx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-     &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
+     &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
          enddo
-!          call rhs_s( qc,qc1,fqc,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-!      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-!      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
-! 
-!          call rhs_s( qr,qr1,fqr,ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-!      &               xnus,xnusz,nz1,nx,ny,iper,jper,  &
-!      &               Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
 
+! first moments of qx's
 
+<<<<<<< HEAD
 ! other scalars
        if ( nscalar > 0 ) then
+=======
+>>>>>>> weno
          do n = 1,nscalar
            call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-                       xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
+                       xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
          enddo
         endif
 
-         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper      )
+         call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper )
 
 !
 !--------------
