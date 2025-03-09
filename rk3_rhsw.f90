@@ -20,7 +20,7 @@
 
       integer nx1,i,ip1,im1,ip2,im2,ip3  &
      &       ,ny1,j,jp1,jm1,jp2,jm2,jp3,jpj,jpm,jpp,jmm  &
-     &       ,nz2,k,nz
+     &       ,nz2,k,nz,km1
       character*6 order
 
       nx1 = nx-1
@@ -101,7 +101,7 @@
      &                                      *(w  (k,i,j)+w  (k,ip1,jpj))
                end do
             else if(order.eq.'third '.or.order.eq.'fourth')  then
-               do k=1,nz1
+               do k=2,nz1
                   flux1(k,i,j) =  1./12.*  &
      &                                .5*(ru1(k,i  ,j  )+ru1(k-1,i,j))  &
      &                                *(7.*(w(k,ip1,jpm)+w(k,i  ,j  ))  &
@@ -116,7 +116,7 @@
      &                                    -(w(k,ip2,jp1)+w(k,im1,jpm)))
                end do
                if(order.eq.'third ')  then
-                  do k=1,nz1
+                  do k=2,nz1
                      flux1(k,i,j) =  flux1(k,i,j)+1./12.*  &
      &                                abs(.5*(ru1(k,i,j)+ru1(k-1,i,j)))  &
      &                               *(-3.*(w(k,ip1,jpm)-w(k,i  ,j  ))  &
@@ -132,7 +132,7 @@
                   end do
                end if
             else if(order.eq.'fifth '.or.order.eq.'sixth ')  then
-               do k=1,nz1
+               do k=2,nz1
                   flux1(k,i,j) = (1./60.)*.5*(ru1(k,i,j)+ru1(k-1,i,j))  &
      &                              *(37.*(w(k,ip1,jpm)+w(k,i  ,j  ))  &
      &                                -8.*(w(k,ip2,jm1)+w(k,im1,jpj))   &
@@ -147,7 +147,7 @@
      &                                   +(w(k,ip3,jpp)+w(k,im2,jm1)))
                end do
                if(order.eq.'fifth ')  then
-                  do k=1,nz1
+                  do k=2,nz1
                    flux1(k,i,j) =flux1(k,i,j)-(1./60.)*  &
      &                               abs(.5*(ru1(k,i,j)+ru1(k-1,i,j)))  &
      &                                  *((w(k,ip3,jmm)-w(k,im2,jp1))  &

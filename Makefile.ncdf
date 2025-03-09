@@ -1,30 +1,42 @@
 #
 FC     = gfortran
-FFLAGS = -O2
+FFLAGS = -O2 -fopenmp
+#FFLAGS = -O0 -g -fcheck=all -fopenmp
+#FFLAGS = -O2
 
 OUTPUTINC = ${NETCDF_INC}
 LINKOPTS  = ${NETCDF_LIB}
 
 OUTPUT_CODE = ncdf.inc.f90
 
-.SUFFIXES: .f90 .F90
+#.SUFFIXES: .f90 .F90
 
-OBJS = module_mp_nssl_2mom.o ncdf_utils.o\
+OBJS = module_mp_nssl_2mom.o rk3_modules.o ncdf_utils.o  \
        rk3_main.o rk3_init.o rk3_rhss.o rk3_rhsu1.o \
-       rk3_rhsu2.o rk3_rhsu3.o \
+       rk3_rhsu2.o rk3_rhsu3.o                      \
        rk3_rhsw.o rk3_smlstep.o rk3_coefs.o kessler.o 
 
-.f90.o:
-	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.f90
+#.f90.o:
+#	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.f90
 
-.F90.o:
-	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
+#.F90.o:
+#	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
+
+%.o : %.f90 ; $(FC) $(FFLAGS) -c $*.f90
+
+%.o : %.F90 ; $(FC) $(FFLAGS) -c $*.F90
 
 rk3_moist:  $(OBJS) $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
 	$(FC) $(FFLAGS) -I$(OUTPUTINC) -o rk3_moist $(OBJS) $(LINKOPTS)
 
 rk3_main.o: rk3_main.f90 $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
-	$(FC) -c $(FFLAGS) $(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
+	$(FC) -c $(FFLAGS) -I$(OUTPUTINC) rk3_main.f90 $(LINKOPTS)
+
+ncdf_utils.o: ncdf_utils.f90
+	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
+
+#module_mp_nssl_2mom.o: module_mp_nssl_2mom.F90
+#	$(FC) $(OMP) $(FFLAGS) -c module_mp_nssl_2mom.F90
 
 clean:
 	rm -f *.o *.mod rk3_moist

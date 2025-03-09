@@ -15,11 +15,14 @@
 
       PROGRAM HEXKLOUD   ! In honor of Joe Klemp
 
-      USE module_mp_nssl_2mom
+      USE module_mp_nssl_2mom, only: nssl_2mom_driver, nssl_2mom_init
+      use rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, &
+          yh,yu1,yu2,yu3
 
       implicit none
 
       integer, parameter :: nz= 41, nx= 91, ny= 79, nz1=nz-1, nx1=nx-1, ny1=ny-1
+!      include "dims.inc.f90"
 
 !     parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 !     parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
@@ -29,39 +32,18 @@
 !     parameter (nz= 41, nx= 101, ny= 5, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 !     parameter (nz= 41, nx= 5, ny=101, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 
-      real u1  (nz1,0:nx,ny), u11 (nz1,0:nx,ny), ru1 (nz1,0:nx,ny)  &
-     &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)  &
-     &    ,ru1i(nz1,0:nx,ny), gu1 (nz1,0:nx,ny), du1 (nz1,0:nx,ny)  &
-     &    ,u3  (nz1,0:nx,ny), u31 (nz1,0:nx,ny), ru3 (nz1,0:nx,ny)  &
-     &    ,ru31(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)  &
-     &    ,ru3i(nz1,0:nx,ny), gu3 (nz1,0:nx,ny), du3 (nz1,0:nx,ny)  &
-     &    ,u2  (nz1,nx,0:ny), u21 (nz1,nx,0:ny), ru2 (nz1,nx,0:ny)  &
-     &    ,ru21(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)  &
-     &    ,ru2i(nz1,nx,0:ny), gu2 (nz1,nx,0:ny), du2 (nz1,nx,0:ny)  &
-     &    ,w   (nz ,nx,  ny), w1  (nz ,nx  ,ny), rw  (nz ,nx  ,ny)  &
-     &    ,rw1 (nz ,nx  ,ny), fw  (nz1,nx  ,ny)  &
-     &    ,t   (nz1,nx  ,ny), t1  (nz1,nx  ,ny), rt  (nz1,nx  ,ny)  &
-     &    ,rt1 (nz1,nx  ,ny), ft  (nz1,nx  ,ny)  &
-     &    ,ti  (nz1,nx  ,ny), rti (nz1,nx  ,ny), rtb (nz1,nx  ,ny)  &
-     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny)  &
-     &    ,rri (nz1,nx  ,ny), rb  (nz1,nx  ,ny), fr  (nz1,nx  ,ny)  &
-     &    ,p   (nz1,nx  ,ny), pb  (nz1,nx  ,ny), pii (nz1,nx  ,ny)  &
-     &    ,ww  (nz ,nx  ,ny), rho (nz1,nx  ,ny), tb  (nz1,nx  ,ny)  &
-     &    ,rs  (nz1,nx  ,ny), ts  (nz1,nx  ,ny), div (nz1,nx  ,ny)  &
-     &    ,a   (nz1,nx  ,ny), b   (nz1,nx  ,ny), c   (nz1,nx  ,ny)  &
-     &    ,cofwz (nz1,nx,ny), coftz (nz ,nx,ny), cofwt (nz1,nx,ny)  &
-     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny)                     &
-     &    ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny)  &
-     &    ,cofwrr(nz1,nx,ny), cofwr     (nx,ny), dhh1      (nx,ny)  &
-     &    ,dhh2      (nx,ny), dhh3      (nx,ny), hh        (nx,ny)  &
-     &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
-     &    , u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny)  &
-     &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1)
+      real,allocatable,dimension(:,:,:) :: &
+        u1,u11,ru1,ru11,fu1,ru1i,gu1,du1,u3,u31,ru3,ru31,fu3, &
+        ru3i,gu3,du3,u2,u21,ru2,ru21,fu2,ru2i,gu2,du2,w,w1,rw, &
+        rw1,fw,t,t1,rt,rt1,ft,ti,rti,rtb,rr,rr1,rri,rb,fr,p,pb, &
+        pii,ww,rho,tb,rs,ts,div,a,b,c,cofwz,coftz,cofwt,alpha,gamma, &
+        flux1,flux2,flux3,cofwrr,fluxz
+      real,allocatable,dimension(:,:) :: cofwr,dhh1,dhh2,dhh3,hh,hs
+      real,allocatable,dimension(:) :: wdtz,zu,zw,ds,u1z,u2z,u3z,tz,ax,tzv,rqvb,rel_hum,qvzv
 
-      real ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
-     &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)  &
-     &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)  &
-     &    ,t_d_tend (nz1,nx  ,ny)
+      real, allocatable, dimension(:,:,:) :: ru1_save, ru3_save, ru2_save, &
+         rw_save, rt_save, rr_save, t_d_tend
+
 
 ! rqx,rqx1 are mass content (qx*rho)
 ! qx, qx1 are mass mixing ratio
@@ -75,16 +57,14 @@
 
       integer :: nmoist, nscalar
 
-      real*4 plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
-     &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)  &
-     &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)  &
-     &      ,x(nx),y(ny),time,pxl,pxr,pyl,pyr,pzl,zptop,xpll,xplr  &
+      real, allocatable, dimension(:,:) :: plt,pltx,plty
+      real, allocatable, dimension(:) :: hxpl,x,y
+      
+      real*4 time,pxl,pxr,pyl,pyr,pzl,zptop,xpll,xplr  &
      &      ,ypll,yplr,zplb,zplt,dxp,dyp,dzp,wmax(2401),waxis(2401)  &
      &      ,wmplt
 
       real*4 Azero(1)
-
-      common /grid/ xh, xu1, xu2, xu3, yh, yu1, yu2, yu3
 
       integer imass, rk_step, ns_rk, total_steps
       character*3 slice(2)
@@ -104,6 +84,7 @@
       integer :: jjm1, jjp1, jjpj, jjpm, iim1
       integer :: k, kk, kkk, km1, kwmax, nit, npl, npr, ns, ns0
       integer :: nxc, nxpl, nyc, nypl, nz2, nzpl
+      integer :: nxnc, nync
       real :: p0, pi, pitop, pressure, qvs
       real :: r, rad, radx, rady, radz, rcv, rd
       real :: rdx, rdy, rdz
@@ -118,6 +99,7 @@
       integer :: li = 4, ls = 5, lh = 6, lhl = 7
       integer :: lnc = 1, lnr = 2, lni = 3, lns = 4, lnh = 5, lnhl = 6, lccn = 7
       integer :: lvh = 8, lvhl = 9
+      integer :: lzr = 0, lzh = 0, lzhl = 0
       real    :: tmp
       real, dimension(20) :: nssl_params
 
@@ -129,7 +111,7 @@
                  nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
                  nssl_rho_qh=600., nssl_rho_qhl=800., nssl_rho_qs=100.
 
-      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1
+      integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1, nssl_3moment = 0
       integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
       integer           :: iadvord = 5 ! advection order
       character(len=6)  :: order
@@ -137,22 +119,31 @@
       real              :: delt  = 3.     ! bubble temp
       real              :: dt    = 6.0    ! time step
       logical           :: debug = .false.
+      logical           :: doplot = .true. ! flag for ncarg plotting
 
 ! Arrays for netCDF
 
-      character(len=3),  dimension(20) :: varlabel
-      character(len=20)                :: ncdf_file
+      character(len=3),  dimension(30) :: varlabel
+      character(len=61)                :: ncdf_file
+      character(len=20)                :: runname = 'hexcloud'
+      character(len=5)                 :: timestr
+      integer                          :: ncdf_nvar
 
-      integer           :: ncdf_nvar
       real, allocatable :: ncdf_var(:,:,:,:)
+      logical                          :: writenc = .true.
 
 ! Namelist declarations
 
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
       integer           :: iunit
+      integer           :: ncupert = 1 ! 0=U output as full value; 1=U output as u-pert
+      integer           :: ncuopt = 3 ! option for putting U on square grid
+                                      ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
-      namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, dt, iwty, debug
+      namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
+                      dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
+                      ncuopt,ncupert
 
 ! Start here and read namelist
 
@@ -164,6 +155,7 @@
        open(15,file=trim(filename),status='old',form='formatted')
        rewind(15)
        read(15,NML=main)
+       close(15)
 
       ELSE
 
@@ -178,7 +170,8 @@
 
          nmoist  = 3
          nscalar = 0
-         allocate( dz3d(1,1,1), dbz(1,1,1), ws(1,1,1), pres(1,1,1) )
+         allocate( dz3d(1,1,1), ws(1,1,1), pres(1,1,1) )
+         allocate( dbz(nz1,nx,ny) )
 
       ELSEIF ( mp_physics == 18 ) THEN
 
@@ -186,15 +179,21 @@
 
          IF ( nssl_2moment_on == 1 ) THEN
 
-            i = 5
-            nscalar = 9
+            if ( nssl_3moment == 1 ) then
+              i = 8
+              nscalar = 9+3
+              lzr = 10; lzh = 11; lzhl = 12
+            else
+              i = 5
+              nscalar = 9
+            endif
 
          ELSEIF ( nssl_2moment_on == 0 ) THEN
 
             i = 0
-            nscalar = 1
-            lnc = 1; lnr = 1; lni = 1; lns = 1; lnh = 1; lnhl = 1; lccn = 1
-            lvh = 1; lvhl = 1
+            nscalar = 0
+            lnc = 0; lnr = 0; lni = 0; lns = 0; lnh = 0; lnhl = 0; lccn = 0
+            lvh = 0; lvhl = 0
             nssl_ccn_is_ccna = 0
 
          ENDIF
@@ -221,7 +220,7 @@
          nssl_params(14) = 0 ! reserved
          nssl_params(15) = 0 ! reserved
          CALL nssl_2mom_init(nssl_params=nssl_params,ipctmp=i,mixphase=0,        &
-                             nssl_density_on=.true.,                             &
+                             nssl_density_on= ( i >= 5 ),                        &
                              nssl_hail_on=.true.,                                &
                              nssl_ccn_on= ( i >= 5 ),                            &
                              nssl_icdx=6,                                        &
@@ -263,18 +262,60 @@
                 fqx(nz1,nx,ny,nmoist) )
 
       IF ( nscalar > 0 ) THEN
-        allocate( rsx(nz1,nx,ny,nscalar),  &
-                  rsx1(nz1,nx,ny,nscalar), &
-                  sx(nz1,nx,ny,nscalar),   &
-                  sx1(nz1,nx,ny,nscalar),  &
-                  fsx(nz1,nx,ny,nscalar) )
+        allocate( rsx(nz1,nx,ny,0:nscalar),  &
+                  rsx1(nz1,nx,ny,0:nscalar), &
+                  sx(nz1,nx,ny,0:nscalar),   &
+                  sx1(nz1,nx,ny,0:nscalar),  &
+                  fsx(nz1,nx,ny,0:nscalar) )
       ELSE
-        allocate( rsx(1,1,1,1),  &
-                  rsx1(1,1,1,1), &
-                  sx(1,1,1,1),   &
-                  sx1(1,1,1,1),  &
-                  fsx(1,1,1,1) )
+        allocate( rsx(1,1,1,0:1),  &
+                  rsx1(1,1,1,0:1), &
+                  sx(1,1,1,0:1),   &
+                  sx1(1,1,1,0:1),  &
+                  fsx(1,1,1,0:1) )
       ENDIF
+      
+      nxcpy = nx
+      nycpy = ny
+
+      allocate( u1(nz1,0:nx,ny), u11(nz1,0:nx,ny),ru1(nz1,0:nx,ny)  &
+     &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)                     &
+     &    ,ru1i(nz1,0:nx,ny), gu1 (nz1,0:nx,ny), du1 (nz1,0:nx,ny)  &
+     &    ,u3  (nz1,0:nx,ny), u31 (nz1,0:nx,ny), ru3 (nz1,0:nx,ny)  &
+     &    ,ru31(nz1,0:nx,ny), fu3 (nz1,0:nx,ny)                     &
+     &    ,ru3i(nz1,0:nx,ny), gu3 (nz1,0:nx,ny), du3 (nz1,0:nx,ny)  &
+     &    ,u2  (nz1,nx,0:ny), u21 (nz1,nx,0:ny), ru2 (nz1,nx,0:ny)  &
+     &    ,ru21(nz1,nx,0:ny), fu2 (nz1,nx,0:ny)                     &
+     &    ,ru2i(nz1,nx,0:ny), gu2 (nz1,nx,0:ny), du2 (nz1,nx,0:ny)  &
+     &    ,w   (nz ,nx,  ny), w1  (nz ,nx  ,ny), rw  (nz ,nx  ,ny)  &
+     &    ,rw1 (nz ,nx  ,ny), fw  (nz1,nx  ,ny)                     &
+     &    ,t   (nz1,nx  ,ny), t1  (nz1,nx  ,ny), rt  (nz1,nx  ,ny)  &
+     &    ,rt1 (nz1,nx  ,ny), ft  (nz1,nx  ,ny)                     &
+     &    ,ti  (nz1,nx  ,ny), rti (nz1,nx  ,ny), rtb (nz1,nx  ,ny)  &
+     &    ,rr  (nz1,nx  ,ny), rr1 (nz1,nx  ,ny)                     &
+     &    ,rri (nz1,nx  ,ny), rb  (nz1,nx  ,ny), fr  (nz1,nx  ,ny)  &
+     &    ,p   (nz1,nx  ,ny), pb  (nz1,nx  ,ny), pii (nz1,nx  ,ny)  &
+     &    ,ww  (nz ,nx  ,ny), rho (nz1,nx  ,ny), tb  (nz1,nx  ,ny)  &
+     &    ,rs  (nz1,nx  ,ny), ts  (nz1,nx  ,ny), div (nz1,nx  ,ny)  &
+     &    ,a   (nz1,nx  ,ny), b   (nz1,nx  ,ny), c   (nz1,nx  ,ny)  &
+     &    ,cofwz (nz1,nx,ny), coftz (nz ,nx,ny), cofwt (nz1,nx,ny)  &
+     &    ,alpha (nz1,nx,ny), gamma (nz1,nx,ny)                     &
+     &    ,flux1(nz1,0:nx,ny),flux2(nz1,nx,0:ny),flux3(nz1,0:nx,ny) &
+     &    ,cofwrr(nz1,nx,ny), cofwr     (nx,ny), dhh1      (nx,ny)  &
+     &    ,dhh2      (nx,ny), dhh3      (nx,ny), hh        (nx,ny)  &
+     &    ,hs        (nx,ny), wdtz(nz), zu(nz1), zw(nz),   ds(nz1)  &
+     &    ,u1z(nz1),u2z(nz1), u3z(nz1), tz(nz1), fluxz(0:nz1,nx,ny) &
+     &    ,ax(nz), tzv (nz1), rqvb(nz1),  rel_hum (nz1), qvzv(nz1) )
+
+       allocate( ru1_save (nz1,0:nx,ny), ru3_save (nz1,0:nx,ny)  &
+     &    ,ru2_save (nz1,nx,0:ny), rw_save  (nz ,  nx,ny)        &
+     &    ,rt_save  (nz1,nx  ,ny), rr_save  (nz1,  nx,ny)        &
+     &    ,t_d_tend (nz1,nx  ,ny) )
+
+       allocate( plt (nx,ny), pltx(nx,nz), plty(ny,nz), hxpl  (nx)  &
+     &      ,xh  (nx,ny), xu1 (nx,ny), xu2 (nx,ny), xu3(nx,ny)      &
+     &      ,yh  (nx,ny), yu1 (nx,ny), yu2 (nx,ny), yu3(nx,ny)      &
+     &      ,x(nx),y(ny) )
 
 !--------------
 !
@@ -447,10 +488,12 @@
 
 
 ! other scalars
+       if ( nscalar > 0 ) then
          do n = 1,nscalar
            call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
                        xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,order)
          enddo
+        endif
 
          call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper      )
 
@@ -469,9 +512,11 @@
                   do n = 1,nmoist
                     rqx(k,i,j,n) = amax1(rqx1(k,i,j,n) + ns_rk*fqx(k,i,j,n),0.0)
                   enddo
+                  if ( nscalar > 0 ) then
                   do n = 1,nscalar
                     rsx(k,i,j,n) = amax1(rsx1(k,i,j,n) + ns_rk*fsx(k,i,j,n),0.0)
                   enddo
+                  endif
 !                   rqv(k,i,j) = amax1(rqv1(k,i,j) + ns_rk*fqv(k,i,j),0.0)
 !                   rqc(k,i,j) = amax1(rqc1(k,i,j) + ns_rk*fqc(k,i,j),0.0)
 !                   rqr(k,i,j) = amax1(rqr1(k,i,j) + ns_rk*fqr(k,i,j),0.0)
@@ -825,7 +870,7 @@
       do j=1,ny
          do i=1,nx
             do k=1,nz1
-              pres(k,i,j) = 1.e5*p(k,i,j)**(1./.2875)
+              pres(k,i,j) = 1.e5*p(k,i,j)**(1./.2875) ! from kessler code
               if ( debug .and. i == iwmax .and. j == jwmax ) then
                if ( nscalar > 1 ) then
                 write(6,*) k,pres(k,i,j),ws(k,i,j),qx(k,i,j,lc)*1000., sx(k,i,j,lnc), &
@@ -841,37 +886,38 @@
 
 !         pres(1:nz1,1:nx,1:ny) = 1.e5*p(1:nz1,1:nx,1:ny)**(1./.2875)
          
-         CALL nssl_2mom_driver(                          &
-                     ITIMESTEP=nit,                      &
-                     TH=t,                              &
-                     QV=qx(1,1,1,lv),                         &
-                     QC=qx(1,1,1,lc),                         &
-                     QR=qx(1,1,1,lr),                         &
-                     QI=qx(1,1,1,li),                         &
-                     QS=qx(1,1,1,ls),                         &
-                     QH=qx(1,1,1,lh),                         &
-                     QHL=qx(1,1,1,lhl),                        &
- !                    CCW=qnc_curr,                       &
-                     CCW=sx(1,1,1,lnc),                    &
-                     CRW=sx(1,1,1,lnr),                       &
-                     CCI=sx(1,1,1,lni),                       &
-                     CSW=sx(1,1,1,lns),                       &
-                     CHW=sx(1,1,1,lnh),                       &
-                     CHL=sx(1,1,1,lnhl),                       &
-                     VHW=sx(1,1,1,lvh), f_vhw=(lvh > 1),      &
-                     VHL=sx(1,1,1,lvhl), f_vhl=(lvhl > 1),      &
-!                      ZRW=qzr_curr,  f_zrw = f_qzr,       &
-!                      ZHW=qzg_curr,  f_zhw = f_qzg,       &
-!                      ZHL=qzh_curr,  f_zhl = f_qzh,       &
-                     cn=sx(1,1,1,lccn),  f_cn=(lccn > 1),    &
-                     PII=pb,                               &
-                     P=pres,                                &
-                     W=ws,                               &
-                     DZ=dz3d,                            &
-                     DTP=dt,                             &
-                     DN=rho,                             &
+         CALL nssl_2mom_driver(                           &
+                     ITIMESTEP=nit,                       &
+                     TH=t,                                &
+                     QV=qx(1,1,1,lv),                     &
+                     QC=qx(1,1,1,lc),                     &
+                     QR=qx(1,1,1,lr),                     &
+                     QI=qx(1,1,1,li),                     &
+                     QS=qx(1,1,1,ls),                     &
+                     QH=qx(1,1,1,lh),                     &
+                     QHL=qx(1,1,1,lhl),                   &
+ !                    CCW=qnc_curr,                        &
+                     CCW=sx(1,1,1,lnc),                   &
+                     CRW=sx(1,1,1,lnr),                   &
+                     CCI=sx(1,1,1,lni),                   &
+                     CSW=sx(1,1,1,lns),                   &
+                     CHW=sx(1,1,1,lnh),                   &
+                     CHL=sx(1,1,1,lnhl),                  &
+                     VHW=sx(1,1,1,lvh), f_vhw=(lvh > 1),  &
+                     VHL=sx(1,1,1,lvhl),f_vhl=(lvhl > 1), &
+                     ZRW=sx(1,1,1,lzr), f_zrw=(lzr > 1),  &
+                     ZHW=sx(1,1,1,lzh), f_zhw=(lzh > 1),  &
+                     ZHL=sx(1,1,1,lzhl),f_zhl=(lzhl > 1), &
+                     cn=sx(1,1,1,lccn), f_cn=(lccn > 1),  &
+                     PII=pb,                              &
+                     P=pres,                              &
+                     W=ws,                                &
+                     DZ=dz3d,                             &
+                     DTP=dt,                              &
+                     DN=rho,                              &
                       RAINNC   = RAINNC,                  &
                       RAINNCV  = RAINNCV,                 &
+                      isedonly_in = 0,                    &
 !                      SNOWNC   = SNOWNC,                  &
 !                      SNOWNCV  = SNOWNCV,                 &
 !                      HAILNC   = HAILNC,                  &
@@ -879,16 +925,12 @@
 !                      GRPLNC   = GRAUPELNC,               &
 !                      GRPLNCV  = GRAUPELNCV,              &
 !                      SR=SR,                              &
-                     dbz      = dbz      ,               &
+                     dbz      = dbz,                      &
 !                     ssat3d   = ssat,  f_ssat=f_ssat,    &
 !                     ssati    = ssati, f_ssati=f_ssati,  &
-!#if ( WRF_CHEM == 1 )
-!                    WETSCAV_ON = config_flags%wetscav_onoff == 1, &
-!                    EVAPPROD=evapprod,RAINPROD=rainprod, &
-!#endif
-                     nssl_progn=.false.,              &
-                     diagflag = .true.,                &
-                     ke_diag = nz1,                &
+                     nssl_progn=.false.,                  &
+                     diagflag = .true.,                   &
+                     ke_diag = nz1,                       &
 !                      cu_used=cu_used,                    &
 !                      qrcuten=qrcuten,                    &  ! hm
 !                      qscuten=qscuten,                    &  ! hm
@@ -902,7 +944,7 @@
 !                      has_reqs=has_reqs,                  & ! ala G. Thompson
 !                      hail_maxk1=hail_maxk1,              &
 !                      hail_max2d=hail_max2d,              &
-                     nwp_diagnostics=0, &
+                     nwp_diagnostics=0,                    &
                   IDS=ids,IDE=ide, JDS=jds,JDE=jde, KDS=kds,KDE=kde, &
                   IMS=ims,IME=ime, JMS=jms,JME=jme, KMS=kms,KME=kme, &
                   ITS=its,ITE=ite, JTS=jts,JTE=jte, KTS=kts,KTE=kte  &
@@ -995,7 +1037,7 @@
 !
 ! Code block for NCAR GRAPHICS - uncomment if you want to use this 
 !
-!     include plotting.inc.f90
+!     include "plotting.inc.f90"
 !
 !-------------------------------------------------------------------------------
 !

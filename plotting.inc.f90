@@ -17,7 +17,22 @@
             end do
          end do
          
-         if((kkk.ge.ip).or. (nit.eq.0)) then      
+        if((kkk.ge.ip).or. (nit.eq.0)) then      
+
+     if ( mp_physics == 1 ) then ! set dbz for Kessler micro
+       do j = 1,ny
+         do i = 1,nx
+           do k = 1,nz1
+             tmp = 2.46e4*(1000.*rqx(k,i,j,lr))**1.27
+             if ( tmp > 0.0 ) then
+                dbz(k,i,j) = max(0.0, 10.0 * log10(tmp))
+             else
+                dbz(k,i,j) = 0.0
+             endif
+           enddo
+          enddo
+         enddo
+     endif
 
             print 901 ,time
   901       format(1h ,'time =',f10.1)
@@ -57,6 +72,8 @@
         call wplot(wmax,waxis,wmplt,ip,nit+1,total_steps)
         write(6,*) 'i,j,k,wmax: ', IWMAX,JWMAX,KWMAX,WMAX(nit+1)
         
+         if ( doplot ) then
+
 !            go to 122
 
 !
@@ -285,6 +302,22 @@
 !               call curve(x,hxpl,nx)
                call frame
 
+             if ( nmoist >= lhl ) then
+               do i=1,nxpl
+                  ii = i+ipi-1
+                  do k=1,nz1
+                     if(mod(ii,2).eq.0.)  then
+                        pltx(i,k) = 1000.*.5*(qx(k,ii,j,lhl)+qx(k,ii,jp1,lhl))
+                     else
+                        pltx(i,k) = 1000.*qx(k,ii,j,lhl)
+                     end if
+                  end do
+               end do
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'hl',plane,'p',  &
+     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
+!               call curve(x,hxpl,nx)
+               call frame
+               endif
 
                do i=1,nxpl
                   ii = i+ipi-1
@@ -296,7 +329,7 @@
                      end if
                   end do
                end do
-               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'dbz',plane,'p',  &
+               call conplot(pltx,nx,nxpl,nz1,0.,0.,0.,'db',plane,'p',  &
      &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
@@ -505,7 +538,7 @@
                      plty(j,k)=dbz(k,i,jj)
                   end do
                end do
-               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'dbz',plane,'p',  &
+               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'db',plane,'p',  &
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
@@ -772,6 +805,26 @@
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
 
+
+               IF ( nmoist >= lhl ) THEN
+               do j=1,nypl
+                  jj = j+jpi-1
+                  do i=1,nxpl
+                     ii = i+ipi-1
+                     if(mod(ii,2).eq.0.)  then
+                        jp1 =min(jj+1,ny)
+                        if(jper*jj.eq.ny)  jp1 = 2
+                        plt(i,j) = 1000.*.5*(qx(k,ii,jj,lhl)+qx(k,ii,jp1,lhl))
+                     else
+                        plt(i,j) = 1000.*qx(k,ii,jj,lhl)
+                     end if
+                  end do
+               end do
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'hl',plane,'h ',  &
+     &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
+               call frame
+               ENDIF
+
                do j=1,nypl
                   jj = j+jpi-1
                   do i=1,nxpl
@@ -785,7 +838,7 @@
                      end if
                   end do
                end do
-               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'dbz',plane,'h ',  &
+               call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'db',plane,'h ',  &
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
                
@@ -795,6 +848,8 @@
 
 !  124          continue
 
+        endif ! doplot
         end if
 
      END IF
+
