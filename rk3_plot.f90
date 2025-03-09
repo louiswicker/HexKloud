@@ -186,19 +186,25 @@
 !---------------------------------------------------------------------
 !
       subroutine cpmpxy(imap,xinp,yinp,xotp,yotp)
+       use rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, &
+          yh,yu1,yu2,yu3
 !      parameter (nx=43,ny=37)
 !      parameter (nx=61,ny=53)
 !      parameter (nx=181,ny=157)
-      parameter (nx=91,ny=79)
+!      parameter (nx=91,ny=79)
 !      parameter (nx=47,ny=40)
 !      parameter (nx=121,ny=105)
 !      parameter (nx=181,ny=53)
 !      parameter (nx=101,ny=5)
 !      parameter (nx=5,ny=101)
+       integer nx,ny
 
-      common /grid/ xh(nx,ny),xu1(nx,ny),xu2(nx,ny),xu3(nx,ny),  &
-     &              yh(nx,ny),yu1(nx,ny),yu2(nx,ny),yu3(nx,ny)
+!      common /grid/ xh(nx,ny),xu1(nx,ny),xu2(nx,ny),xu3(nx,ny),  &
+!     &              yh(nx,ny),yu1(nx,ny),yu2(nx,ny),yu3(nx,ny)
 
+      nx = nxcpy
+      ny = nycpy
+      
       if(imap.eq.1)  then
          im  = int(xinp)
 !         ip  = min(im+1,nx)
