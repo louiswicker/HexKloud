@@ -16,8 +16,8 @@
       PROGRAM HEXKLOUD   ! In honor of Joe Klemp
 
       USE module_mp_nssl_2mom, only: nssl_2mom_driver, nssl_2mom_init
-      use rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, &
-          yh,yu1,yu2,yu3
+
+      USE rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, yh,yu1,yu2,yu3
 
       implicit none
 
@@ -113,8 +113,6 @@
 
       integer           :: nssl_ccn_is_ccna=1, nssl_2moment_on=1, nssl_3moment = 0
       integer           :: mp_physics = 1 ! microphysics: 1=kessler; 18= NSSL 2-moment
-      integer           :: iadvord = 5 ! advection order
-      character(len=6)  :: order
 
       real              :: delt  = 3.     ! bubble temp
       real              :: dt    = 6.0    ! time step
@@ -128,31 +126,25 @@
       character(len=20)                :: runname = 'hexcloud'
       character(len=5)                 :: timestr
       integer                          :: ncdf_nvar
+      logical                          :: writenc = .true.
 
       real, allocatable :: ncdf_var(:,:,:,:)
-      logical                          :: writenc = .true.
 
 ! Namelist declarations
 
       character(LEN=50) :: filename = 'namelist.input'
       logical           :: if_exist
-<<<<<<< HEAD
       integer           :: iunit
       integer           :: ncupert = 1 ! 0=U output as full value; 1=U output as u-pert
-      integer           :: ncuopt = 3 ! option for putting U on square grid
+      integer           :: ncuopt  = 3 ! option for putting U on square grid
                                       ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
-      namelist /main/ mp_physics, iadvord, nssl_2moment_on, nssl_cccn, delt, &
-                      dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
-                      ncuopt,ncupert
-=======
-      integer           :: iunit, h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
-
+      integer           :: h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
       integer           :: hh_sca_adv
 
-      namelist /main/ debug, mp_physics, nssl_2moment_on, nssl_cccn, delt, dt, iwty, & 
-                      h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
->>>>>>> weno
+      namelist /main/ mp_physics, nssl_2moment_on, nssl_cccn, delt, &
+                      dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
+                      ncuopt,ncupert, h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
 
 ! Start here and read namelist
 
@@ -242,32 +234,8 @@
 
       ENDIF
 
-<<<<<<< HEAD
       write(6,*) 'H_MOM_ADV:  ', h_mom_adv, '  V_MOM_ADV: ', v_mom_adv
       write(6,*) 'H_SCA_ADV:  ', h_sca_adv, '  V_SCA_ADV: ', v_sca_adv
-=======
-! Set up advection scheme
-      
-      if ( iadvord == 2 ) then
-        order = 'second'
-      elseif ( iadvord == 3 ) then
-        order = 'third '
-      elseif ( iadvord == 4 ) then
-        order = 'fourth'
-      elseif ( iadvord == 5 ) then
-        order = 'fifth '
-      elseif ( iadvord == 6 ) then
-        order = 'sixth '
-      elseif ( iadvord == 7 ) then
-        order = 'weno5 '
-      else
-        write(0,*) 'invalid value of iadvord: ',iadvord, 'resetting to 5'
-        iadvord = 5
-        order = 'fifth '
-      endif
-
-      write(6,*) 'IADVORD:  ', iadvord, '  SCHEME: ', order
->>>>>>> main
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
@@ -505,16 +473,13 @@
 
 ! first moments of qx's
 
-<<<<<<< HEAD
 ! other scalars
-       if ( nscalar > 0 ) then
-=======
->>>>>>> weno
-         do n = 1,nscalar
-           call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
-                       xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
-         enddo
-        endif
+         if ( nscalar > 0 ) then
+            do n = 1,nscalar
+              call rhs_s( sx(1,1,1,n),sx1(1,1,1,n),fsx(1,1,1,n),ww,ru1,ru2,ru3,rho,ds,dts,dtsa,rdz,  &
+                          xnus,xnusz,nz1,nx,ny,iper,jper, Azero, 1  ,1,1,flux1,flux2,flux3,fluxz,hh_sca_adv,v_sca_adv)
+            enddo
+         endif
 
          call rhs_rho( fr,ru1,ru2,ru3,ww,dts,dtsa,rdz, nz1,nx,ny,iper,jper )
 

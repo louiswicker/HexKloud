@@ -13,7 +13,7 @@ NCARG_CODE = plotting.inc.f90
 
 .SUFFIXES: .f90 .F90
 
-OBJS = module_mp_nssl_2mom.o weno.o ncdf_utils.o\
+OBJS = module_mp_nssl_2mom.o weno.o rk3_grid.o ncdf_utils.o\
        rk3_main.o rk3_init.o rk3_rhss.o rk3_rhsu1.o \
        rk3_rhsu2.o rk3_rhsu3.o \
        rk3_rhsw.o rk3_smlstep.o rk3_coefs.o kessler.o 
@@ -32,6 +32,9 @@ rk3_ncar:  $(OBJS) $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
 
 rk3_main.o: rk3_main.f90 $(OUTPUT_CODE) initialize.inc.f90 boundaries.inc.f90
 	$(FC) -c $(FFLAGS) rk3_main.f90 
+
+rk3_grid.o: rk3_grid.f90 
+	$(FC) -c $(FFLAGS) rk3_grid.f90 
 
 weno.o: weno.f90 
 	$(FC) -c $(FFLAGS) weno.f90 
