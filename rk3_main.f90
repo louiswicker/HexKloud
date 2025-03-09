@@ -245,11 +245,15 @@
         order = 'fifth '
       elseif ( iadvord == 6 ) then
         order = 'sixth '
+      elseif ( iadvord == 7 ) then
+        order = 'weno5 '
       else
         write(0,*) 'invalid value of iadvord: ',iadvord, 'resetting to 5'
         iadvord = 5
         order = 'fifth '
       endif
+
+      write(6,*) 'IADVORD:  ', iadvord, '  SCHEME: ', order
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
