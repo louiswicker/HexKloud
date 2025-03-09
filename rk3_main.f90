@@ -237,8 +237,32 @@
 
       ENDIF
 
+<<<<<<< HEAD
       write(6,*) 'H_MOM_ADV:  ', h_mom_adv, '  V_MOM_ADV: ', v_mom_adv
       write(6,*) 'H_SCA_ADV:  ', h_sca_adv, '  V_SCA_ADV: ', v_sca_adv
+=======
+! Set up advection scheme
+      
+      if ( iadvord == 2 ) then
+        order = 'second'
+      elseif ( iadvord == 3 ) then
+        order = 'third '
+      elseif ( iadvord == 4 ) then
+        order = 'fourth'
+      elseif ( iadvord == 5 ) then
+        order = 'fifth '
+      elseif ( iadvord == 6 ) then
+        order = 'sixth '
+      elseif ( iadvord == 7 ) then
+        order = 'weno5 '
+      else
+        write(0,*) 'invalid value of iadvord: ',iadvord, 'resetting to 5'
+        iadvord = 5
+        order = 'fifth '
+      endif
+
+      write(6,*) 'IADVORD:  ', iadvord, '  SCHEME: ', order
+>>>>>>> main
       
       allocate( rqx(nz1,nx,ny,nmoist),  &
                 rqx1(nz1,nx,ny,nmoist), &
