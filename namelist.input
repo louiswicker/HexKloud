@@ -4,7 +4,12 @@
 ! delt : bubble temperature
 ! iwty : 1=gmeta; 20=postscript
 &main
-  iadvord = 5,
+
+  h_mom_adv = 5
+  v_mom_adv = 3
+  h_sca_adv = 55
+  v_sca_adv = 3
+
   mp_physics = 18,
   nssl_2moment_on = 1,
   dt = 10.0
