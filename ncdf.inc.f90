@@ -17,7 +17,8 @@
          end do
       end do
 
-      IF( (kkk.ge.ip) .or. (nit.eq.0) ) THEN      
+!      IF( (kkk.ge.ip) .or. (nit.eq.0) ) THEN      
+      IF ( outputflag ) THEN
 
         kkk = 0
 
@@ -71,12 +72,16 @@
       varlabel(4)  = 'THP'
 
       varlabel(5)  = 'QvP'
-      varlabel(6)  = 'Qc '
-      varlabel(7)  = 'Qr'
+      n = 5
+
+      IF ( mp_physics > 0 ) THEN
+        varlabel(6)  = 'Qc '
+        varlabel(7)  = 'Qr'
+        n = 7
+      ENDIF
 
       IF ( mp_physics == 18 ) THEN  ! NSSL - 2M
 
-       n = 7
        if ( lhl > 1 ) then
          varlabel(n+1)  = 'Qi '
          varlabel(n+2)  = 'Qs '
@@ -112,10 +117,16 @@
 
        allocate(ncdf_var(nxpl,nypl,nz1,ncdf_nvar) )
 
-      ELSE  ! Kessler microphysics
+      ELSEIF ( mp_physics == 1 ) THEN  ! Kessler microphysics
 
-         ncdf_nvar = 8
-         varlabel(8)  = 'REF'
+         ncdf_nvar = n + 1
+         varlabel(ncdf_nvar)  = 'REF'
+
+         allocate(ncdf_var(nxpl,nypl,nz1,ncdf_nvar) )
+
+      ELSEIF ( mp_physics == 0 ) THEN  ! qv only
+
+         ncdf_nvar = n 
 
          allocate(ncdf_var(nxpl,nypl,nz1,ncdf_nvar) )
 
@@ -130,7 +141,7 @@
 !===============================================================================
 
      write(6,*) 'Now writing ', ncdf_file
-     write(6,*) ''
+     write(6,*) 'ncdf_var = ',ncdf_nvar
 
 !===============================================================================
 

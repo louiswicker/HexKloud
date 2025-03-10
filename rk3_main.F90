@@ -17,13 +17,13 @@
 
       USE module_mp_nssl_2mom, only: nssl_2mom_driver, nssl_2mom_init
 
-      USE rk3_grid, only : nxcpy,nycpy,xh,xu1,xu2,xu3, yh,yu1,yu2,yu3
+      USE rk3_grid, only : nx,ny,nz,xh,xu1,xu2,xu3, yh,yu1,yu2,yu3
 
       implicit none
 
-      integer, parameter :: nz= 41, nx= 91, ny= 79, nz1=nz-1, nx1=nx-1, ny1=ny-1
+!      integer, parameter :: nz= 41, nx= 91, ny= 79, nz1=nz-1, nx1=nx-1, ny1=ny-1
 !      include "dims.inc.f90"
-
+      integer :: nz1, nx1, ny1
 !     parameter (nz= 41, nx= 61, ny= 53, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 !     parameter (nz= 41, nx=181, ny=157, nz1=nz-1, nx1=nx-1, ny1=ny-1)
 !     parameter (nz= 41, nx= 47, ny= 40, nz1=nz-1, nx1=nx-1, ny1=ny-1)
@@ -90,22 +90,20 @@
       real :: rdx, rdy, rdz
       real :: resm, ritot, rrtot, rtot, rttop, rula
       real :: side, smdiv, smdivx, smdivz, sum
-      real :: t0, tdiff, temp, thetak, tinit, tip, tk, tkm1, tkp1
-      real :: tmax, tstp, u1m, u2m, u3m, um, ub, ur, vm, vnu, xa, xc
-      real :: xht, xl, xn, xn2, xn2l, xn2m, xnu, xnus, xnus0, xnusz, xnusz0, xnut
+      real :: t0, tdiff, temp, thetak, tinit, tk, tkm1, tkp1
+      real :: tmax, u1m, u2m, u3m, um, ub, ur, vm, vnu, xa, xc
+      real :: xht, xn, xn2, xn2l, xn2m, xnu, xnus, xnus0, xnusz, xnusz0, xnut
       real :: ya, yc, yl, yht
+      real :: xl = 84000., zl = 20000.
       real :: zcent, zd, zinv, zt, ztemp
-      integer, parameter :: lv = 1, lc = 2, lr = 3
+      integer, parameter :: lv = 1
+      integer :: lc = 2, lr = 3
       integer :: li = 4, ls = 5, lh = 6, lhl = 7
       integer :: lnc = 1, lnr = 2, lni = 3, lns = 4, lnh = 5, lnhl = 6, lccn = 7
       integer :: lvh = 8, lvhl = 9
       integer :: lzr = 0, lzh = 0, lzhl = 0
       real    :: tmp
       real, dimension(20) :: nssl_params
-
-      integer :: IDS=1,IDE=nx, JDS=1,JDE=ny, KDS=1,KDE=nz1, &
-                 IMS=1,IME=nx, JMS=1,JME=ny, KMS=1,KME=nz1, &
-                 ITS=1,ITE=nx, JTS=1,JTE=ny, KTS=1,KTE=nz1
 
       real    :: nssl_cccn = 6.e8, nssl_alphah=0, nssl_alphahl=1,  &
                  nssl_cnoh=4.e4, nssl_cnohl=4.e3, nssl_cnor=8.e6, nssl_cnos=3.0e6, &
@@ -118,6 +116,8 @@
       real              :: dt    = 6.0    ! time step
       logical           :: debug = .false.
       logical           :: doplot = .true. ! flag for ncarg plotting
+      
+      logical           :: outputflag = .false.
 
 ! Arrays for netCDF
 
@@ -139,15 +139,22 @@
       integer           :: ncuopt  = 3 ! option for putting U on square grid
                                       ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
-      integer           :: h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
+      integer           :: h_mom_adv = 5, h_sca_adv = 5 ! options: 2-6
+      integer           :: v_mom_adv = 2, v_sca_adv = 2 ! options: 2 or 4
       integer           :: hh_sca_adv
 
+      real              :: tstp = 3600. ! stop time
+      real              :: tip  = 300.  ! output interval (must be divisible by dt)
       namelist /main/ mp_physics, nssl_2moment_on, nssl_cccn, delt, &
-                      dt, iwty, debug, runname, writenc, doplot, nssl_3moment, &
+                      iwty, debug, runname, writenc, doplot, nssl_3moment, &
                       ncuopt,ncupert, h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv
+
+      namelist /gridtime/ nx,ny,nz,xl,yl,zl,dt,tstp,tip
 
 ! Start here and read namelist
 
+! default vals set in rk3_grid:  nz= 41; nx= 91; ny= 79
+       
       INQUIRE(file=trim(filename), exist=if_exist)
 
       IF ( if_exist ) THEN
@@ -156,6 +163,8 @@
        open(15,file=trim(filename),status='old',form='formatted')
        rewind(15)
        read(15,NML=main)
+       rewind(15)
+       read(15,NML=gridtime)
        close(15)
 
       ELSE
@@ -164,6 +173,8 @@
         stop
 
       ENDIF
+
+       nz1=nz-1; nx1=nx-1; ny1=ny-1
 
 ! Next set up the microphyics
 
@@ -227,6 +238,15 @@
                              nssl_icdx=6,                                        &
                              nssl_icdxhl=6,                                      &
                              ccn_is_ccna=nssl_ccn_is_ccna)
+
+      ELSEIF ( mp_physics == 0 ) THEN ! vapor only
+
+         nmoist  = 1
+         lr = 0; lc = 0
+         nscalar = 0
+         allocate( dz3d(1,1,1), ws(1,1,1), pres(1,1,1) )
+         allocate( dbz(1,1,1) )
+
       ELSE
 
         write(0,*) 'unsupported value of mp_physics: ', mp_physics
@@ -257,8 +277,6 @@
                   fsx(1,1,1,0:1) )
       ENDIF
       
-      nxcpy = nx
-      nycpy = ny
 
       allocate( u1(nz1,0:nx,ny), u11(nz1,0:nx,ny),ru1(nz1,0:nx,ny)  &
      &    ,ru11(nz1,0:nx,ny), fu1 (nz1,0:nx,ny)                     &
@@ -301,7 +319,7 @@
 
 !--------------
 !
-      include "initialize.inc.f90"
+#include  "initialize.inc.F90"
 !
 !--------------
 
@@ -318,6 +336,9 @@
       kkk = ip
 
       do nit = 0, total_steps
+
+      outputflag = (kkk+1.ge.ip) .or. (nit.eq.0)
+     ! write(6,*) 'nit ',nit*dt,outputflag , nit,kkk,ip
 
       if(nit .ne. 0) then
 
@@ -903,7 +924,7 @@
                      DN=rho,                              &
                       RAINNC   = RAINNC,                  &
                       RAINNCV  = RAINNCV,                 &
-                      isedonly_in = 0,                    &
+                      isedonly_in = 1,                    &
 !                      SNOWNC   = SNOWNC,                  &
 !                      SNOWNCV  = SNOWNCV,                 &
 !                      HAILNC   = HAILNC,                  &
@@ -915,7 +936,7 @@
 !                     ssat3d   = ssat,  f_ssat=f_ssat,    &
 !                     ssati    = ssati, f_ssati=f_ssati,  &
                      nssl_progn=.false.,                  &
-                     diagflag = .true.,                   &
+                     diagflag = outputflag,                   &
                      ke_diag = nz1,                       &
 !                      cu_used=cu_used,                    &
 !                      qrcuten=qrcuten,                    &  ! hm
@@ -931,10 +952,9 @@
 !                      hail_maxk1=hail_maxk1,              &
 !                      hail_max2d=hail_max2d,              &
                      nwp_diagnostics=0,                    &
-                  IDS=ids,IDE=ide, JDS=jds,JDE=jde, KDS=kds,KDE=kde, &
-                  IMS=ims,IME=ime, JMS=jms,JME=jme, KMS=kms,KME=kme, &
-                  ITS=its,ITE=ite, JTS=jts,JTE=jte, KTS=kts,KTE=kte  &
-                                                                    )
+                IDS=1,IDE=nx, JDS=1,JDE=ny, KDS=1,KDE=nz1, &
+                IMS=1,IME=nx, JMS=1,JME=ny, KMS=1,KME=nz1, &
+                ITS=1,ITE=nx, JTS=1,JTE=ny, KTS=1,KTE=nz1    )
       
       endif
 
@@ -1017,14 +1037,15 @@
 !      end do
 !     write(6,*) vdiffm,u2(kvm,ivm,jvm),ivm,jvm,kvm
 
-      end if !  take step only after plotting first
+      end if ! (nit .ne. 0) take step only after plotting first
 
 !===============================================================================
 !
 ! Code block for NCAR GRAPHICS - uncomment if you want to use this 
 !
-!     include "plotting.inc.f90"
-!
+#ifdef USENCARG
+     include "plotting.inc.f90"
+#endif
 !-------------------------------------------------------------------------------
 !
 ! Code block for netCDF output - uncomment if you want to use this 
