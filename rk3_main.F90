@@ -962,7 +962,7 @@
          do i=1,nx
             do k=1,nz1
 
-               t   (k,i,j) = t(k,i,j)*(1.+1.61*qx(k,i,j,1))/t0 
+               t   (k,i,j) = t(k,i,j)*(1.+1.61*qx(k,i,j,lv))/t0
                t_d_tend(k,i,j) = (t(k,i,j) - t_d_tend(k,i,j))/(ns*dts)
 !c             t_d_tend(k,i,j) = 0.
                t1  (k,i,j) = t(k,i,j)
