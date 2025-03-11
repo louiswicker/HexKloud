@@ -43,6 +43,8 @@ rk3_grid.o: rk3_grid.f90
 ncdf_utils.o: ncdf_utils.f90
 	$(FC) $(FFLAGS) -I$(OUTPUTINC) -c $*.F90
 
+rk3_rhss.o: weno.o
+
 weno.o: weno.f90 
 	$(FC) -c $(FFLAGS) weno.f90 
 
