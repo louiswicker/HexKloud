@@ -1,5 +1,5 @@
 ! "main" namelist
-! h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv = advection order for horizontal (2-6) and vertical (2 or 4)
+! h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv = advection order for horizontal (2-6) and vertical (2-4)
 !   for WENO, use 33 (3rd ord) or 55 (5th order) for horizontal (no vertical yet)
 ! mp_physics : microphysics: 0=dry (vapor only); 1=kessler; 18= NSSL 2-moment
 ! delt : bubble temperature
@@ -9,13 +9,17 @@
 ! ncuopt = option for U output in netcdf (2=all hex centers; 3=averaged to x points)
 ! ncupert = Whether netcdf output has full U (0) or perturbation U (1)
 &main
-  mp_physics = 1 ,
-  nssl_2moment_on = 0,
-  nssl_3moment = 0,
+  mp_physics = 18,
+  nssl_2moment_on = 1,
+!  nssl_3moment = 1,
+  h_mom_adv = 5
+  v_mom_adv = 3
+  h_sca_adv = 55
+  v_sca_adv = 3
   delt = 3.0
   iwty = 20 
   debug = .false.
-  runname = 'kess',
+  runname = 'n2mweno',
   writenc = .true.,
   doplot = .true.,
   ncuopt = 3,
@@ -33,8 +37,8 @@
 !   Then yl is set by d*(ny-1)
 &gridtime
   dt = 10.0
-  tstp = 1200,
-  tip  =  300.,
+  tstp = 7200,
+  tip  =  600.,
   nz= 41,
   nx= 91, 
   ny= 79,

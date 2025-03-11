@@ -140,7 +140,7 @@
                                       ! 2=average to hex cell centers; 3=averages to alt. center/edge
 
       integer           :: h_mom_adv = 5, h_sca_adv = 5 ! options: 2-6
-      integer           :: v_mom_adv = 2, v_sca_adv = 2 ! options: 2 or 4
+      integer           :: v_mom_adv = 3, v_sca_adv = 3 ! options: 2-4
       integer           :: hh_sca_adv
 
       real              :: tstp = 3600. ! stop time
