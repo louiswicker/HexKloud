@@ -924,7 +924,7 @@
                      DN=rho,                              &
                       RAINNC   = RAINNC,                  &
                       RAINNCV  = RAINNCV,                 &
-                      isedonly_in = 1,                    &
+                      isedonly_in = 0,                    &
 !                      SNOWNC   = SNOWNC,                  &
 !                      SNOWNCV  = SNOWNCV,                 &
 !                      HAILNC   = HAILNC,                  &
