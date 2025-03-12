@@ -17,7 +17,8 @@
             end do
          end do
          
-        if((kkk.ge.ip).or. (nit.eq.0)) then      
+!        if((kkk.ge.ip).or. (nit.eq.0)) then      
+        IF ( outputflag ) THEN
 
      if ( mp_physics == 1 ) then ! set dbz for Kessler micro
        do j = 1,ny
@@ -48,7 +49,7 @@
             end do
 
             rtot  = 100.*(rtot-rrtot)/ritot
-            write(6,*) '       percent mass change =',rtot
+            write(6,*) '       percent mass change1 =',rtot
 
             if(iplt.eq.1)  then       
 
@@ -252,6 +253,7 @@
 !
 !************  x-z perturbation qc cross section
 !                          
+               IF ( lc > 0 ) THEN
                do i=1,nxpl
                   ii = i+ipi-1
                   do k=1,nz1
@@ -266,9 +268,11 @@
     &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
               call frame
+              ENDIF
 !
 !************  x-z perturbation qr cross section
 !                          
+               IF ( lr > 0 ) THEN
                do i=1,nxpl
                   ii = i+ipi-1
                   do k=1,nz1
@@ -283,6 +287,7 @@
      &              time,pxl,pxr,pzl,zptop,xpll,xplr,zplb,zplt,dxp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
+               ENDIF
 
 !************  x-z perturbation qh cross section
 !                          
@@ -494,12 +499,14 @@
 !
 !************  y-z perturbation qc cross section
 !                          
+               IF ( lc > 0 ) THEN
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
                      plty(j,k)=1000.*qx(k,i,jj,lc)
                   end do
                end do
+               ENDIF
 !               call conplot(plty,ny,nypl,nz1,0.,0.,0.,'qc',plane,'p',
 !     &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !c               call curve(x,hxpl,nx)
@@ -507,6 +514,7 @@
 !
 !************  y-z perturbation qr cross section
 !                          
+               IF ( lr > 0 ) THEN
                do k=1,nz1
                   do j=1,nypl
                      jj = j+jpi-1
@@ -517,6 +525,7 @@
      &              time,pyl,pyr,pzl,zptop,ypll,yplr,zplb,zplt,dyp,dzp)
 !               call curve(x,hxpl,nx)
                call frame
+               ENDIF
 
 !************  y-z perturbation qh cross section
 !                          
@@ -748,11 +757,13 @@
 !
 !************  x-y perturbation qc cross section
 !                          
+               IF ( lc > 0 ) THEN
                do j=1,ny
                   do i=1,nx
                      plt(i,j) = 1000.*qx(k,i,j,lc)
                   end do
                end do
+               ENDIF
 
 !               call trplot(plt,nx,ny,0.,0.,0.,'qc',plane,'h ',time,
 !     &                     pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
@@ -770,6 +781,7 @@
 !     &              .08,.93,.1,.95,xpll,xplr,ypll,yplr,dxp,dyp,'C')
 !               call frame
                
+               IF ( lr > 0 ) THEN
                do j=1,nypl
                   jj = j+jpi-1
                   do i=1,nxpl
@@ -786,6 +798,7 @@
                call conplot(plt,nx,nxpl,nypl,0.,0.,0.,'qr',plane,'h ',  &
      &              time,pxl,pxr,pyl,pyr,xpll,xplr,ypll,yplr,dxp,dyp)
                call frame
+               ENDIF
 
               IF ( nmoist >= lh ) THEN
                do j=1,nypl

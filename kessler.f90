@@ -44,6 +44,9 @@
       dtlc = dt
       nz2  = nz1 - 1
 
+
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,qrprod,velqr,qvs,velu,veld,prod,ern,BUOYCY)
       do j=1,ny
          do i=1,nx
 !

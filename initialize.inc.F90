@@ -80,15 +80,16 @@
 !    smdiv = .0
      epssm = .1
 
-     tip   = 300. ! plotting interval in seconds
+!     tip   = 300. ! plotting interval in seconds
 !    tip   = 600.
 !    tip   = 300.
 
      ip    = nint(tip/dt)
+     write(*,*) 'ip = ',ip
       
 !    ip = 1
       
-     tstp  = 12.*ip*dt ! total time is X plotting intervals
+!     tstp  = 12.*ip*dt ! total time is X plotting intervals
      nz2   = nz1-1
      t0    = 300.
      r     = 287.
@@ -101,8 +102,8 @@
      cb    = 25.
      delt = delt/t0
 
-     zt    = 20000.
-     zd    = 10000.
+     zt    = zl ! 20000.
+     zd    = Min( 10000., zt)
 !    xnut = .025
 !    xnut = .05
      xnut = .0
@@ -677,28 +678,30 @@
          end do
       end do
 
+#ifdef USENCARG
 !===============================================================================
 ! Uncomment these lines if you want to use NCAR graphics
 !
-!     IF( iplt  = 1 ) THEN
-!
-!       IF ( .true. ) THEN
-!
+    IF( iplt == 1 ) THEN
+
+      IF ( .true. ) THEN
+
 ! Open GKS.
-!
-!       CALL GOPKS (IERF,0)
-!       CALL GOPWK (IWID,LUNI,IWTY)
-!       CALL GACWK (IWID)
-!
-!       ELSE
-!
-!        call opngks
-!
-!       ENDIF
-!        call frame
-!     END IF
+
+      CALL GOPKS (IERF,0)
+      CALL GOPWK (IWID,LUNI,IWTY)
+      CALL GACWK (IWID)
+
+      ELSE
+
+       call opngks
+
+      ENDIF
+       call frame
+    END IF
 !
 !===============================================================================
+#endif
 
       kkk  = 0
       nit  = 0

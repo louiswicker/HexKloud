@@ -38,6 +38,9 @@
 !
 ! Right hand side of s equation
 
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,jm1,jm2,jp1,jp2,jp3,jpp,jpj,jpm,jmm, &
+!$OMP         im1,im2,ip1,ip2,ip3,qip2,qip1,qi,qim1,qim2 )
       do j=1,ny
          jp1 = j+1
          if(jper*j.eq.ny  )  jp1 = 2
@@ -232,6 +235,8 @@
 !
 !   Flux divergence calculation
 !
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,jp1,jm1,im1,jpj,jpm)
       do j=1,ny
          jp1 = j+1
          if(jper*j.eq.ny )  jp1 = 2
@@ -258,6 +263,10 @@
 !
 !        horizontal mixing and Rayleigh damping terms
 !
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,jm1,jm2,jp1,jp2,jp3,jpp,jpj,jpm,jmm, &
+!$OMP         im1,ip1)
+
          do j = 1,ny
             jp1 = min(j+1,ny)
             if(jper*j.eq.ny )  jp1 = 2
@@ -302,6 +311,8 @@
 !
 !        vertical mixing terms
 !
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,ii,jj )
          do j = 1,ny
             jj = min(j,n3)
             do i = 1,nx
@@ -358,6 +369,8 @@
 !
 !        right hand side of rho equation
 !
+!$OMP PARALLEL DO DEFAULT(SHARED) &
+!$OMP PRIVATE(i,j,k,jm1,jp1,jpj,jpm,im1 )
          do j=1,ny
             jp1 = min(j+1,ny)
             if(jper*j.eq.ny )  jp1 = 2
