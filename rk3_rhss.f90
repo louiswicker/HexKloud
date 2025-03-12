@@ -162,6 +162,60 @@
 
                end if
 
+            else if( h_adv == 33 ) then  ! WENO-3
+
+               do k=1,nz1
+
+                  IF( ru1(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip1 = s(k,ip1,jpm)
+                    qi   = s(k,i  ,j  )
+                    qim1 = s(k,im1,jpj)
+ 
+                  ELSE
+ 
+                    qim1 = s(k,ip2,jm1)
+                    qi   = s(k,ip1,jpm)
+                    qip1 = s(k,i  ,j  )
+ 
+                  ENDIF
+ 
+                  flux1(k,i,j) = ru1(k,i,j) * weno3(qim1,qi,qip1)
+
+                  IF( ru2(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip1 = s(k,i,  jp1)
+                    qi   = s(k,i,  j  )
+                    qim1 = s(k,i,  jm1)
+ 
+                  ELSE
+ 
+                    qim1 = s(k,i,  jp2)
+                    qi   = s(k,i,  jp1)
+                    qip1 = s(k,i,  j  )
+ 
+                  ENDIF
+ 
+                  flux2(k,i,j) = ru2(k,i,j) * weno3(qim1,qi,qip1)
+ 
+                  IF( ru3(k,i,j) .ge. 0.0 ) THEN
+ 
+                    qip1 = s(k,ip1,jpj)
+                    qi   = s(k,i,  j  )
+                    qim1 = s(k,im1,jpm)
+ 
+                  ELSE
+ 
+                    qim1 = s(k,ip2,jp1)
+                    qi   = s(k,ip1,jpj)
+                    qip1 = s(k,i,  j  )
+ 
+                  ENDIF
+ 
+                  flux3(k,i,j) = ru3(k,i,j) * weno3(qim1,qi,qip1)
+
+               end do
+               
             else if( h_adv == 55 ) then  ! WENO-5
 
                do k=1,nz1
