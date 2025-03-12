@@ -1,20 +1,47 @@
+!=========================================
 ! "main" namelist
-! h_mom_adv, v_mom_adv, h_sca_adv, v_sca_adv = advection order for horizontal (2-6) and vertical (2-4)
-!   for WENO, use 33 (3rd ord) or 55 (5th order) for horizontal (no vertical yet)
-! mp_physics : microphysics: 0=dry (vapor only); 1=kessler; 18= NSSL 2-moment
-! delt : bubble temperature
-! iwty : 1=gmeta; 20=postscript for ncargraphics output
-! doplot = flag for ncargraphics output
-! writenc = flag for netcdf output
-! ncuopt = option for U output in netcdf (2=all hex centers; 3=averaged to x points)
-! ncupert = Whether netcdf output has full U (0) or perturbation U (1)
+!=========================================
+!
+!  HORIZONTAL/VERTICAL ADVECTION CONTROLS
+!-----------------------------------------
+!  h_mom_adv, v_mom_adv,
+!  h_sca_adv, v_sca_adv
+!
+!   Valid horizontal 2,3,4,5,6,33,55 (3rd-order,5th-order WENO)
+!   Vertical advection is 2nd or 3rd order
+!
+!  MP_PHYSICS: microphysics:
+!
+!    0=dry (vapor only)
+!    1=kessler
+!   18= NSSL 2-moment
+!-----------------------------------------
+!  INITAL CONDITIONS
+!
+!    delt : bubble temperature
+!-----------------------------------------
+!
+!   OUTPUT controls
+!
+!-----------------------------------------
+!
+!  doplot: True/False --> flag for ncargraphics output
+!
+!  iwty:   type of ncar output
+!     1=gmeta
+!    20=postscript for ncargraphics output
+!
+!  writenc = flag for netcdf output
+!  ncuopt  = option for U output in netcdf (2=all hex centers; 3=averaged to x points)
+!  ncupert = Whether netcdf output has full U (0) or perturbation U (1)
+!
 &main
   mp_physics = 18,
   nssl_2moment_on = 1,
 !  nssl_3moment = 1,
   h_mom_adv = 5
   v_mom_adv = 3
-  h_sca_adv = 55
+  h_sca_adv = 33
   v_sca_adv = 3
   delt = 3.0
   iwty = 20 
@@ -25,26 +52,39 @@
   ncuopt = 3,
   ncupert = 0,
 /
-
+!
+!=========================================
 ! "gridtime" namelist
-! dt : time step
-! tstp : total time (seconds) (multiple of tip and dt)
-! tip : output interval (seconds) (must be divisible by dt)
-! nx,ny,nz : grid dimensions
-! xl : east-west domain size
-!   d = 2.*xl/(sqrt(3.)*float(nx-1))
-!   so xl = ((sqrt(3.)/2.)*(nx-1)*d
-!   Then yl is set by d*(ny-1)
+!=========================================
+!
+!   dt   : time step
+!   tstp : total time (seconds) (multiple of tip and dt)
+!   tip  : output interval (seconds) (must be divisible by dt)
+!
+!-----------------------------------------
+!
+!   nx,ny,nz : grid dimensions
+
+!     xl : east-west domain size
+!                                d = 2.*xl/(sqrt(3.)*float(nx-1))
+!     xl = ((sqrt(3.)/2.)*(nx-1)*d
+!     yl = d*(ny-1)
+!-----------------------------------------
+!
 &gridtime
-  dt = 10.0
+  dt   = 10.0
   tstp = 7200,
   tip  =  600.,
-  nz= 41,
-  nx= 91, 
-  ny= 79,
-  xl = 84000.,
+  nz   = 41,
+  nx   = 91, 
+  ny   = 79,
+  xl   = 84000.,
 /
-
+!
+!=========================================
+! "nssl_mp_params" namelist
+!=========================================
+!
 &nssl_mp_params
 !  infall = 0,
 /
