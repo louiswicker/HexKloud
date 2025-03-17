@@ -464,14 +464,12 @@
      &               nmoist,rqvb,dtsa,g,ds,dts,rdz,f,xnus,xnusz,nz1,  &
      &               nx,ny,iper,jper,flux1,flux2,flux3,fluxz,h_mom_adv,v_mom_adv)
 
+         hh_sca_adv = h_scal_adv
+
          IF( rk_step < 3 ) THEN   ! ONLY DO WENO ON LAST STEP for scalars
 
            IF( h_sca_adv == 33 ) hh_sca_adv = 3
            IF( h_sca_adv == 55 ) hh_sca_adv = 5
-
-         ELSE
-
-           hh_sca_adv = h_sca_adv
 
          ENDIF
 
